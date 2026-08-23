@@ -1,12 +1,11 @@
 # PROXYCHK — Proxy Validation & Analysis Engine
 
 ```text
-                               __         __  
-    ____  _________  _  ______/ /_  _____/ /__
-   / __ \/ ___/ __ \| |/_/ __  / / / / __/ //_/
-  / /_/ / /  / /_/ />  </ /_/ / /_/ / /_/ ,<   
- / .___/_/   \____/_/|_|\__,_/\__, /\__/_/|_|  
-/_/                           /____/            
+  ____  ____   ______   ____  __  ____  _   _ _  __
+ |  _ \|  _ \ / __ \ \ / /\ \/ / / ___|| | | | |/ /
+ | |_) | |_) | |  | \ V /  \  / | |    | |_| | ' / 
+ |  __/|  _ <| |  | || |   /  \ | |___ |  _  | . \ 
+ |_|   |_| \_\\____/ |_|  /_/\_\ \____||_| |_|_|\_\
 
   PROXYCHK v1.0.0 — Proxy Validation & Analysis Engine
   Author: Mithun A | GitHub: https://github.com/Mithun202008/proxychk
@@ -17,7 +16,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Open Source](https://img.shields.io/badge/Open%20Source-%E2%9D%A4-red.svg)]()
 
-**PROXYCHK** is a high-performance, zero-dependency, cross-platform CLI tool for validating proxy lists. It features real-time streaming output, intelligent CSV field auto-detection, multi-threaded checking, full HTTP/HTTPS/SOCKS4/SOCKS5 protocol support, and comprehensive metadata detail cards for working proxies.
+**PROXYCHK** is a high-performance, zero-dependency, cross-platform CLI tool for validating proxies. It supports both **bulk list files (CSV, TXT, LST)** and **single proxy checks** (with optional authentication), featuring real-time streaming output, intelligent CSV field auto-detection, multi-threaded checking, full HTTP/HTTPS/SOCKS4/SOCKS5 protocol support, and comprehensive metadata detail cards.
 
 ---
 
@@ -131,30 +130,36 @@ pip install .
 
 Once installed, `proxychk` can be executed from **any directory** in your terminal!
 
-### 1. Basic Scan (Default Target & Timeout)
+### 1. Single Proxy Check Mode
 ```bash
+# Check an IP and Port directly
+proxychk 1.2.3.4 8080
+
+# Check an IP and Port with specific protocol
+proxychk 1.2.3.4 8080 socks5
+
+# Check authenticated proxy (URI or host:port:user:pass)
+proxychk socks5://user:pass@1.2.3.4:1080
+proxychk 1.2.3.4:8080:username:password
+```
+
+### 2. Bulk File Scan Mode (CSV or TXT)
+```bash
+# Scan a CSV file
 proxychk examples/proxies.csv
+
+# Scan a plain text list (ip:port line-by-line)
+proxychk my_proxies.txt
 ```
 
-### 2. Test Against a Custom Endpoint
+### 3. Custom Target & Multi-Threaded Scan ⚡
 ```bash
-proxychk examples/proxies.csv https://example.com
+# Scan with custom endpoint, 3s timeout, 10 concurrent worker threads
+proxychk examples/proxies.csv https://example.com 3 10
 ```
 
-### 3. Custom Timeout (e.g., 3 Seconds per Proxy)
+### 4. Using Command Flags
 ```bash
-proxychk examples/proxies.csv https://example.com 3
-```
-
-### 4. High Performance Multi-Threaded Scan ⚡
-Scan large proxy lists concurrently (**10 worker threads**, **3s timeout**):
-```bash
-proxychk examples/proxies.csv http://httpbin.org/ip 3 10
-```
-
-### 5. Using Command Flags
-```bash
-# Set target (-u), timeout (-w), threads (-t), and custom output file (-o)
 proxychk -t 20 -w 3 -u https://httpbin.org/ip -o live_proxies.txt examples/proxies.csv
 ```
 
