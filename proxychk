@@ -375,86 +375,98 @@ def main():
     print(f"  {BOLD}Threads   :{RESET} {CYAN}{threads} worker(s){RESET}")
     print(f"  {DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{RESET}\n")
 
-    # Read CSV
+    # Read File (CSV or Plain TXT list)
     try:
         with open(csv_file, 'r', encoding='utf-8', errors='ignore') as f:
-            reader = csv.reader(f)
-            rows = [row for row in reader if row]
+            raw_lines = [line.strip() for line in f if line.strip() and not line.strip().startswith('#')]
     except Exception as e:
-        print(f"  {RED}[!] Failed to read CSV file: {e}{RESET}\n")
+        print(f"  {RED}[!] Failed to read file: {e}{RESET}\n")
         sys.exit(1)
 
-    if not rows:
-        print(f"  {RED}[!] CSV file is empty.{RESET}\n")
+    if not raw_lines:
+        print(f"  {RED}[!] File is empty.{RESET}\n")
         sys.exit(1)
 
-    header = rows[0]
-    col_map = parse_header_columns(header)
+    # Check if CSV with header
+    header_candidate = [c.strip() for c in raw_lines[0].split(',')]
+    col_map = parse_header_columns(header_candidate)
 
-    if col_map['ip'] == -1 or col_map['port'] == -1:
-        print(f"  {RED}[!] Cannot find required 'ip' or 'port' column in CSV header.{RESET}")
-        print(f"  {YELLOW}    Header detected: {', '.join(header)}{RESET}\n")
-        sys.exit(1)
+    proxy_items = []
+    is_csv_mode = (col_map['ip'] != -1 and col_map['port'] != -1)
 
-    print(f"  {BOLD}Detected Columns:{RESET}")
-    for key, idx in col_map.items():
-        if idx >= 0:
-            print(f"  {GREEN}  ✔{RESET}  col[{idx}]  →  {BOLD}{FIELD_DISPLAY_NAMES[key]}{RESET}")
+    if is_csv_mode:
+        print(f"  {BOLD}File Mode   :{RESET} {GREEN}Structured CSV{RESET}")
+        print(f"  {BOLD}Detected Columns:{RESET}")
+        for key, idx in col_map.items():
+            if idx >= 0:
+                print(f"  {GREEN}  ✔{RESET}  col[{idx}]  →  {BOLD}{FIELD_DISPLAY_NAMES[key]}{RESET}")
 
-    missing_keys = ['type', 'country', 'anon', 'isp', 'latency', 'uptime']
-    for key in missing_keys:
-        if col_map[key] == -1:
-            print(f"  {DIM}  ✗  {FIELD_DISPLAY_NAMES[key]} — not in this CSV{RESET}")
+        missing_keys = ['type', 'country', 'anon', 'isp', 'latency', 'uptime']
+        for key in missing_keys:
+            if col_map[key] == -1:
+                print(f"  {DIM}  ✗  {FIELD_DISPLAY_NAMES[key]} — not in this CSV{RESET}")
+
+        # Parse CSV Rows
+        for line_idx, line in enumerate(raw_lines[1:], start=1):
+            row = [c.strip() for c in line.split(',')]
+            def get_val(key):
+                idx = col_map[key]
+                if idx >= 0 and idx < len(row):
+                    return row[idx].strip().strip('"')
+                return ""
+
+            ip = get_val('ip')
+            port = get_val('port')
+            if not ip or not port:
+                continue
+
+            proto = resolve_protocol(get_val('type'))
+            proxy_items.append({
+                'index': len(proxy_items) + 1,
+                'ip': ip,
+                'port': port,
+                'proto': proto,
+                'country': get_val('country'),
+                'anon': get_val('anon'),
+                'asn': get_val('asn'),
+                'org': get_val('org'),
+                'isp': get_val('isp'),
+                'latency': get_val('latency'),
+                'speed': get_val('speed'),
+                'uptime': get_val('uptime'),
+                'up_ok': get_val('uptime_ok'),
+                'up_try': get_val('uptime_try'),
+                'updated': get_val('updated')
+            })
+    else:
+        print(f"  {BOLD}File Mode   :{RESET} {CYAN}Plain Text / Raw List (IP:Port){RESET}")
+        # Parse Plain Text lines (ip:port, proto://ip:port, ip:port:user:pass, ip,port)
+        pattern = re.compile(r'^(?:(http|https|socks4|socks5)://)?([a-zA-Z0-9\.\-]+)[:\s,]+(\d{1,5})', re.IGNORECASE)
+        for line in raw_lines:
+            match = pattern.search(line)
+            if match:
+                raw_proto, ip, port = match.groups()
+                proto = resolve_protocol(raw_proto) if raw_proto else "http"
+                proxy_items.append({
+                    'index': len(proxy_items) + 1,
+                    'ip': ip,
+                    'port': port,
+                    'proto': proto,
+                    'country': '',
+                    'anon': '',
+                    'asn': '',
+                    'org': '',
+                    'isp': '',
+                    'latency': '',
+                    'speed': '',
+                    'uptime': '',
+                    'up_ok': '',
+                    'up_try': '',
+                    'updated': ''
+                })
 
     print(f"\n  {BOLD}Scanning...{RESET}")
     print(f"  {DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{RESET}\n")
-
-    # Prepare Proxy Items
-    proxy_items = []
-    for line_idx, row in enumerate(rows[1:], start=1):
-        def get_val(key):
-            idx = col_map[key]
-            if idx >= 0 and idx < len(row):
-                return row[idx].strip().strip('"')
-            return ""
-
-        ip = get_val('ip')
-        port = get_val('port')
-        if not ip or not port:
-            continue
-
-        raw_type = get_val('type')
-        proto = resolve_protocol(raw_type)
-
-        country = get_val('country')
-        anon = get_val('anon')
-        asn = get_val('asn')
-        org = get_val('org')
-        isp = get_val('isp')
-        latency = get_val('latency')
-        speed = get_val('speed')
-        uptime = get_val('uptime')
-        up_ok = get_val('uptime_ok')
-        up_try = get_val('uptime_try')
-        updated = get_val('updated')
-
-        proxy_items.append({
-            'index': len(proxy_items) + 1,
-            'ip': ip,
-            'port': port,
-            'proto': proto,
-            'country': country,
-            'anon': anon,
-            'asn': asn,
-            'org': org,
-            'isp': isp,
-            'latency': latency,
-            'speed': speed,
-            'uptime': uptime,
-            'up_ok': up_ok,
-            'up_try': up_try,
-            'updated': updated
-        })
 
     working = []
     dead = []
