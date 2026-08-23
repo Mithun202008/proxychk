@@ -62,11 +62,10 @@ RESET = '\033[0m'
 # ---------- Banner ----------
 def show_banner():
     print(f"{CYAN}{BOLD}")
-    print(r"""  ____    ____    ______   __   __   __   __   ____    _   _   _  __
- |  _ \  |  _ \  / __  \  \ \ / /   \ \ / /  / ___|  | | | | | |/ /
- | |_) | | |_) || |  |  |  \ V /     \   /  | |      | |_| | | ' / 
- |  __/  |  _ < | |__|  |  / . \      | |   | |___   |  _  | | . \ 
- |_|     |_| \_\ \______/ /_/ \_\     |_|    \____|  |_| |_| |_|\_\
+    print(r"""       ___  ___  _____  ____  _  _ _____ _  _ _  __
+      / _ \/ _ \/ _ \ \/ /\ \/ /| |/ / __| || | |/ /
+     / ___/ _  / (_) >  <  \  / | ' < (__| __ | ' < 
+    /_/  /_//_/\___/_/\_\  |_|  |_|\_\___|_||_|_|\_\
 """)
     print(f"{RESET}", end="")
     print(f"  {BOLD}{CYAN}PROXYCHK{RESET} {DIM}v{VERSION}{RESET}  —  Proxy Validation & Analysis Engine")
@@ -672,7 +671,6 @@ def main():
                 auth_str = f"{item['user']}:{item['pass']}@" if item['user'] else ""
                 print(f"  {GREEN}  │{RESET}")
                 print(f"  {GREEN}  │{RESET}  {BOLD}Proxy String   :{RESET}  {DIM}--proxy {item['proto']}://{auth_str}{item['ip']}:{item['port']}{RESET}")
-                print(f"  {GREEN}  │{RESET}  {BOLD}curl Example   :{RESET}  {DIM}curl --proxy {item['proto']}://{auth_str}{item['ip']}:{item['port']} {target_url}{RESET}")
                 print(f"  {GREEN}{BOLD}  └──────────────────────────────────────────────────────────────{RESET}\n")
 
         print(f"  {DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{RESET}")
@@ -757,7 +755,6 @@ def main():
             print(f"  {GREEN}  │{RESET}  {BOLD}Proxied IP     :{RESET}  {MAGENTA}{proxied_ip}{RESET}")
             print(f"  {GREEN}  │{RESET}")
             print(f"  {GREEN}  │{RESET}  {BOLD}Proxy String   :{RESET}  {DIM}--proxy {parsed['proto']}://{auth_str}{parsed['ip']}:{parsed['port']}{RESET}")
-            print(f"  {GREEN}  │{RESET}  {BOLD}curl Example   :{RESET}  {DIM}curl --proxy {parsed['proto']}://{auth_str}{parsed['ip']}:{parsed['port']} {single_target}{RESET}")
             print(f"  {GREEN}{BOLD}  └──────────────────────────────────────────────────────────────{RESET}\n")
             sys.exit(0)
         else:
