@@ -1,11 +1,11 @@
 # PROXYCHK — Proxy Validation & Analysis Engine
 
 ```text
-  ____  ____   ______   ____  __  ____  _   _ _  __
- |  _ \|  _ \ / __ \ \ / /\ \/ / / ___|| | | | |/ /
- | |_) | |_) | |  | \ V /  \  / | |    | |_| | ' / 
- |  __/|  _ <| |  | || |   /  \ | |___ |  _  | . \ 
- |_|   |_| \_\\____/ |_|  /_/\_\ \____||_| |_|_|\_\
+  ____  ____   ______  __  ____   __   ____  _  _  _  __
+ |  _ \|  _ \ / __ \ \ \/ /\ \ / /  / ___|| || || |/ /
+ | |_) | |_) | |  | | \  /  \ V /  | |    | __ || ' / 
+ |  __/|  _ <| |__| | /  \   | |   | |___ | || || . \ 
+ |_|   |_| \_\\____//_/\_\  |_|    \____||_||_||_|\_\
 
   PROXYCHK v1.0.0 — Proxy Validation & Analysis Engine
   Author: Mithun A | GitHub: https://github.com/Mithun202008/proxychk
@@ -196,6 +196,39 @@ proxychk -t 20 -w 3 -u https://httpbin.org/ip -o live_proxies.txt examples/proxi
 | **Speed** | `speed` |
 | **UpTime** | `uptime`, `up_time`, `uptimesuccesscount`, `uptimetrycount` |
 | **Updated At** | `updated_at`, `lastseen`, `last_checked`, `updated`, `date` |
+
+---
+
+## 🔄 How to Upgrade / Update
+
+Users who have installed `proxychk` can upgrade to the latest release anytime using any of these methods:
+
+### Method 1: Automatic CLI Update (Recommended)
+Run the built-in update command in your terminal from anywhere:
+```bash
+proxychk --update
+```
+
+### Method 2: Git Repository Update
+If you cloned the repository, pull the latest changes and re-run your OS installer:
+
+- **Linux / Kali / macOS**:
+  ```bash
+  cd proxychk
+  git pull
+  sudo bash installers/install.sh
+  ```
+- **Windows (PowerShell)**:
+  ```powershell
+  cd proxychk
+  git pull
+  powershell -ExecutionPolicy Bypass -File installers/install.ps1
+  ```
+
+### Method 3: Pip Upgrade
+```bash
+pip install --upgrade git+https://github.com/Mithun202008/proxychk.git
+```
 
 ---
 
