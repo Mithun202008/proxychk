@@ -21,65 +21,107 @@
 
 ---
 
-## ✨ Features
+## 📁 Repository Structure
 
-- ⚡ **Cross-Platform**: Native support for **Linux** (Kali, Ubuntu, Debian), **macOS**, and **Windows** (PowerShell, CMD).
-- 📦 **Zero External Dependencies**: Built entirely with Python 3 standard library (no `pip` installs required).
-- 🔍 **Auto CSV Header Detection**: Intelligently parses CSV files regardless of column order or naming (`ip`, `port`, `protocol`, `country`, `anonymity`, `latency`, `isp`, `uptime`, etc.).
-- 🌐 **Full Protocol Support**: Validates `HTTP`, `HTTPS`, `SOCKS4`, and `SOCKS5` proxies natively.
-- 🎯 **Custom Target & Timeout**: Test proxies against custom endpoints and set custom timeouts.
-- 🚀 **Multi-Threaded Execution**: Concurrent worker pool (`-t` / `--threads`) for scanning thousands of proxies quickly.
-- 📊 **Real-Time Streaming Output**: Watch liveness results stream live with HTTP status codes and latency.
-- 📝 **Auto Save Results**: Exports working proxies with full metadata to formatted text files (`working_proxies_YYYYMMDD_HHMMSS.txt`).
+```text
+proxychk/
+├── proxychk                # Main cross-platform Python CLI binary engine
+├── setup.py                # Standard Python package setup
+├── README.md               # Repository documentation
+├── LICENSE                 # Open-source MIT License
+├── .gitignore              # Git ignore configuration
+├── installers/             # Platform-specific installer scripts
+│   ├── install.sh          # Linux & macOS installer
+│   ├── uninstall.sh        # Linux & macOS uninstaller
+│   ├── install.ps1         # Windows PowerShell installer
+│   ├── uninstall.ps1       # Windows PowerShell uninstaller
+│   └── proxychk.cmd        # Windows CMD/PowerShell helper launcher
+└── examples/               # Sample CSV proxy lists
+    ├── proxies.csv         # Standard test proxy list
+    └── Free_Proxy_List.csv # Multi-column test proxy list
+```
 
 ---
 
-## 🛠️ Step-by-Step Installation Guide
+## 🛠️ Installation Links by Operating System
 
-Follow these simple steps to download, install, and run `proxychk` on your system.
+Select your operating system for direct step-by-step installation instructions:
 
-### Step 1: Clone the Repository
+- [🐧 Linux & Kali Linux Installation](#-linux--kali-linux-installation)
+- [🪟 Windows Installation](#-windows-installation)
+- [🍎 macOS Installation](#-macos-installation)
+- [🐍 Universal Python / Pip Installation](#-universal-python--pip-installation)
 
-Open your terminal and clone the repository using `git`:
+---
+
+### 🐧 Linux & Kali Linux Installation
+
+1. **Clone the repository and enter the directory**:
+   ```bash
+   git clone https://github.com/Mithun202008/proxychk.git
+   cd proxychk
+   ```
+
+2. **Run the Linux installer**:
+   ```bash
+   sudo bash installers/install.sh
+   ```
+   *(To install without root privileges into `~/.local/bin`, run `bash installers/install.sh`)*
+
+3. **Verify installation**:
+   ```bash
+   proxychk --help
+   ```
+
+---
+
+### 🪟 Windows Installation
+
+1. **Clone the repository and enter the directory**:
+   ```powershell
+   git clone https://github.com/Mithun202008/proxychk.git
+   cd proxychk
+   ```
+
+2. **Run the PowerShell installer**:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File installers/install.ps1
+   ```
+
+3. **Restart PowerShell** to refresh your PATH variable, then test:
+   ```powershell
+   proxychk --help
+   ```
+
+---
+
+### 🍎 macOS Installation
+
+1. **Clone the repository and enter the directory**:
+   ```bash
+   git clone https://github.com/Mithun202008/proxychk.git
+   cd proxychk
+   ```
+
+2. **Run the installer**:
+   ```bash
+   sudo bash installers/install.sh
+   ```
+
+3. **Verify installation**:
+   ```bash
+   proxychk --help
+   ```
+
+---
+
+### 🐍 Universal Python / Pip Installation
+
+You can also install `proxychk` directly via Python standard package installer on any operating system:
 
 ```bash
 git clone https://github.com/Mithun202008/proxychk.git
 cd proxychk
-```
-
----
-
-### Step 2: System Installation (Choose Your Operating System)
-
-#### 🐧 Option A: Linux & Kali Linux Setup
-
-Install `proxychk` system-wide to `/usr/local/bin` so you can type `proxychk` from any directory:
-
-```bash
-sudo bash install.sh
-```
-
-*(Optional: To run without root privileges, run `bash install.sh` to install to `~/.local/bin`)*
-
-#### 🪟 Option B: Windows Setup (PowerShell)
-
-Open **PowerShell** inside the `proxychk` folder and run:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File install.ps1
-```
-
-*(Note: Restart your PowerShell terminal after installation to refresh your system PATH variable)*
-
-#### 🍎 Option C: macOS Setup
-
-```bash
-sudo bash install.sh
-```
-
-#### 🐍 Option D: Universal Python / Pip Install (Any OS)
-
-```bash
 pip install .
 ```
 
@@ -87,33 +129,33 @@ pip install .
 
 ## 🚀 Usage & Examples
 
-Once installed, `proxychk` can be launched directly from **any directory** in your terminal!
+Once installed, `proxychk` can be executed from **any directory** in your terminal!
 
 ### 1. Basic Scan (Default Target & Timeout)
 ```bash
-proxychk proxies.csv
+proxychk examples/proxies.csv
 ```
 
 ### 2. Test Against a Custom Endpoint
 ```bash
-proxychk proxies.csv https://example.com
+proxychk examples/proxies.csv https://example.com
 ```
 
 ### 3. Custom Timeout (e.g., 3 Seconds per Proxy)
 ```bash
-proxychk proxies.csv https://example.com 3
+proxychk examples/proxies.csv https://example.com 3
 ```
 
 ### 4. High Performance Multi-Threaded Scan ⚡
 Scan large proxy lists concurrently (**10 worker threads**, **3s timeout**):
 ```bash
-proxychk proxies.csv http://httpbin.org/ip 3 10
+proxychk examples/proxies.csv http://httpbin.org/ip 3 10
 ```
 
 ### 5. Using Command Flags
 ```bash
 # Set target (-u), timeout (-w), threads (-t), and custom output file (-o)
-proxychk -t 20 -w 3 -u https://httpbin.org/ip -o live_proxies.txt proxies.csv
+proxychk -t 20 -w 3 -u https://httpbin.org/ip -o live_proxies.txt examples/proxies.csv
 ```
 
 ---
@@ -154,8 +196,8 @@ proxychk -t 20 -w 3 -u https://httpbin.org/ip -o live_proxies.txt proxies.csv
 
 ## 🗑️ Uninstallation
 
-- **Linux / Kali / macOS**: `sudo bash uninstall.sh`
-- **Windows**: `powershell -ExecutionPolicy Bypass -File uninstall.ps1`
+- **Linux / Kali / macOS**: `sudo bash installers/uninstall.sh`
+- **Windows**: `powershell -ExecutionPolicy Bypass -File installers/uninstall.ps1`
 
 ---
 

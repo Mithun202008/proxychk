@@ -9,6 +9,7 @@ TOOL="proxychk"
 DEFAULT_INSTALL_DIR="/usr/local/bin"
 USER_INSTALL_DIR="${HOME}/.local/bin"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -42,22 +43,22 @@ else
         TARGET_DIR="${USER_INSTALL_DIR}"
     else
         echo -e "  ${RED}[!] Root privileges required to install to ${DEFAULT_INSTALL_DIR}.${RESET}"
-        echo -e "  ${DIM}    Run: sudo bash install.sh${RESET}"
+        echo -e "  ${DIM}    Run: sudo bash installers/install.sh${RESET}"
         echo ""
         exit 1
     fi
 fi
 
 # Copy tool & set permissions
-cp "${SCRIPT_DIR}/${TOOL}" "${TARGET_DIR}/${TOOL}"
+cp "${ROOT_DIR}/${TOOL}" "${TARGET_DIR}/${TOOL}"
 chmod +x "${TARGET_DIR}/${TOOL}"
 
 echo -e "  ${GREEN}[✔] Installed binary →  ${TARGET_DIR}/${TOOL}${RESET}"
 echo -e "  ${GREEN}[✔] Python Runtime  →  $(${PYTHON_CMD} --version)${RESET}"
 echo ""
 echo -e "  ${BOLD}You can now run proxychk from anywhere:${RESET}"
-echo -e "  ${CYAN}  proxychk proxies.csv${RESET}"
-echo -e "  ${CYAN}  proxychk proxies.csv https://example.com 3${RESET}"
+echo -e "  ${CYAN}  proxychk examples/proxies.csv${RESET}"
+echo -e "  ${CYAN}  proxychk examples/proxies.csv https://example.com 3${RESET}"
 echo -e "  ${CYAN}  proxychk --help${RESET}"
 echo ""
 echo -e "  ${DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"

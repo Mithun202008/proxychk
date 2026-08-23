@@ -29,8 +29,9 @@ $scriptDir = $PSScriptRoot
 if (-not $scriptDir) {
     $scriptDir = Get-Location
 }
+$rootDir = (Resolve-Path (Join-Path $scriptDir "..")).Path
 
-$srcProxychk = Join-Path $scriptDir "proxychk"
+$srcProxychk = Join-Path $rootDir "proxychk"
 $srcCmd = Join-Path $scriptDir "proxychk.cmd"
 $destProxychk = Join-Path $installDir "proxychk"
 $destCmd = Join-Path $installDir "proxychk.cmd"
@@ -56,8 +57,8 @@ if ($userPath.IndexOf($installDir) -eq -1) {
 
 Write-Host ""
 Write-Host "  You can now run proxychk from anywhere in a new terminal:" -ForegroundColor Yellow
-Write-Host "    proxychk proxies.csv" -ForegroundColor Cyan
-Write-Host "    proxychk proxies.csv https://example.com 3" -ForegroundColor Cyan
+Write-Host "    proxychk examples/proxies.csv" -ForegroundColor Cyan
+Write-Host "    proxychk examples/proxies.csv https://example.com 3" -ForegroundColor Cyan
 Write-Host "    proxychk --help" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  =====================================================" -ForegroundColor DarkGray
