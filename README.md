@@ -1,10 +1,11 @@
 # PROXYCHK — Proxy Validation & Analysis Engine
 
 ```text
-       ___  ___  _____  ____  _  _ _____ _  _ _  __
-      / _ \/ _ \/ _ \ \/ /\ \/ /| |/ / __| || | |/ /
-     / ___/ _  / (_) >  <  \  / | ' < (__| __ | ' < 
-    /_/  /_//_/\___/_/\_\  |_|  |_|\_\___|_||_|_|\_\
+ ____   ____    ___   __  __    ____ 
+|  _ \ |  _ \  / _ \  \ \/ /  / ___|
+| |_) || |_) || | | |  \  /  | |    
+|  __/ |  _ < | |_| |  /  \  | |___ 
+|_|    |_| \_\ \___/  /_/\_\  \____|
 
   PROXYCHK v1.0.0 — Proxy Validation & Analysis Engine
   Author: Mithun A | GitHub: https://github.com/Mithun202008/proxychk
