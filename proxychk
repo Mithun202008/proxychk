@@ -62,10 +62,18 @@ RESET = '\033[0m'
 
 # ---------- Banner ----------
 def show_banner():
-    print(f"  {CYAN}{BOLD}┌──────────────────────────────────────────────────────────────────┐{RESET}")
-    print(f"  {CYAN}{BOLD}│{RESET}  {BOLD}PROXYCHK{RESET} {DIM}v{VERSION}{RESET}  —  Proxy Validation & Analysis Engine           {CYAN}{BOLD}│{RESET}")
-    print(f"  {CYAN}{BOLD}│{RESET}  {DIM}Author: {AUTHOR}                                                {RESET}{CYAN}{BOLD}│{RESET}")
-    print(f"  {CYAN}{BOLD}└──────────────────────────────────────────────────────────────────┘{RESET}\n")
+    print(f"{CYAN}{BOLD}")
+    print(r"""                               __         __  
+    ____  _________  _  ______/ /_  _____/ /__
+   / __ \/ ___/ __ \| |/_/ __  / / / / __/ //_/
+  / /_/ / /  / /_/ />  </ /_/ / /_/ / /_/ ,<   
+ / .___/_/   \____/_/|_|\__,_/\__, /\__/_/|_|  
+/_/                           /____/            
+""")
+    print(f"{RESET}", end="")
+    print(f"  {BOLD}{CYAN}PROXYCHK{RESET} {DIM}v{VERSION}{RESET}  —  Proxy Validation & Analysis Engine")
+    print(f"  {DIM}Author: {AUTHOR}  |  https://github.com/Mithun202008/proxychk{RESET}")
+    print(f"  {DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{RESET}\n")
 
 # ---------- Help ----------
 def show_help():

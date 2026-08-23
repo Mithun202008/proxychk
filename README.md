@@ -1,54 +1,83 @@
-# proxychk — Proxy Validation & Analysis Engine
+# PROXYCHK — Proxy Validation & Analysis Engine
 
 ```text
-┌──────────────────────────────────────────────────────────────────┐
-│  PROXYCHK v1.0.0 — Proxy Validation & Analysis Engine            │
-│  Author: Mithun A                                                │
-└──────────────────────────────────────────────────────────────────┘
+                               __         __  
+    ____  _________  _  ______/ /_  _____/ /__
+   / __ \/ ___/ __ \| |/_/ __  / / / / __/ //_/
+  / /_/ / /  / /_/ />  </ /_/ / /_/ / /_/ ,<   
+ / .___/_/   \____/_/|_|\__,_/\__, /\__/_/|_|  
+/_/                           /____/            
+
+  PROXYCHK v1.0.0 — Proxy Validation & Analysis Engine
+  Author: Mithun A | GitHub: https://github.com/Mithun202008/proxychk
 ```
 
-**proxychk** is a high-performance, zero-dependency, cross-platform CLI tool for validating proxy lists. It features real-time streaming output, intelligent CSV field auto-detection, multi-threaded checking, full HTTP/HTTPS/SOCKS4/SOCKS5 protocol support, and comprehensive metadata detail cards for working proxies.
+[![Python 3.6+](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/downloads/)
+[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-green.svg)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Open Source](https://img.shields.io/badge/Open%20Source-%E2%9D%A4-red.svg)]()
+
+**PROXYCHK** is a high-performance, zero-dependency, cross-platform CLI tool for validating proxy lists. It features real-time streaming output, intelligent CSV field auto-detection, multi-threaded checking, full HTTP/HTTPS/SOCKS4/SOCKS5 protocol support, and comprehensive metadata detail cards for working proxies.
 
 ---
 
 ## ✨ Features
 
-- ⚡ **Cross-Platform**: Runs natively on **Linux**, **macOS**, and **Windows** (PowerShell, CMD, Bash).
-- 📦 **Zero External Dependencies**: Powered by Python 3 standard library (no third-party dependencies required).
-- 🔍 **Auto CSV Header Detection**: Supports any column ordering and fuzzy header matching (`ip`, `port`, `protocol`, `country`, `anonymity`, `latency`, `isp`, `uptime`, etc.).
-- 🌐 **All Protocols Supported**: Validates `HTTP`, `HTTPS`, `SOCKS4`, and `SOCKS5` proxies natively.
-- 🎯 **Custom Target & Timeout**: Test proxies against custom endpoint URLs and set per-proxy connection timeouts.
+- ⚡ **Cross-Platform**: Native support for **Linux** (Kali, Ubuntu, Debian), **macOS**, and **Windows** (PowerShell, CMD).
+- 📦 **Zero External Dependencies**: Built entirely with Python 3 standard library (no `pip` installs required).
+- 🔍 **Auto CSV Header Detection**: Intelligently parses CSV files regardless of column order or naming (`ip`, `port`, `protocol`, `country`, `anonymity`, `latency`, `isp`, `uptime`, etc.).
+- 🌐 **Full Protocol Support**: Validates `HTTP`, `HTTPS`, `SOCKS4`, and `SOCKS5` proxies natively.
+- 🎯 **Custom Target & Timeout**: Test proxies against custom endpoints and set custom timeouts.
 - 🚀 **Multi-Threaded Execution**: Concurrent worker pool (`-t` / `--threads`) for scanning thousands of proxies quickly.
-- 📊 **Real-Time Streaming Output**: Watch liveness results stream live with HTTP status codes and response latency.
+- 📊 **Real-Time Streaming Output**: Watch liveness results stream live with HTTP status codes and latency.
 - 📝 **Auto Save Results**: Exports working proxies with full metadata to formatted text files (`working_proxies_YYYYMMDD_HHMMSS.txt`).
 
 ---
 
-## 🚀 Installation
+## 🛠️ Step-by-Step Installation Guide
 
-### Linux & macOS
+Follow these simple steps to download, install, and run `proxychk` on your system.
 
-Run the installer via bash:
+### Step 1: Clone the Repository
+
+Open your terminal and clone the repository using `git`:
+
+```bash
+git clone https://github.com/Mithun202008/proxychk.git
+cd proxychk
+```
+
+---
+
+### Step 2: System Installation (Choose Your Operating System)
+
+#### 🐧 Option A: Linux & Kali Linux Setup
+
+Install `proxychk` system-wide to `/usr/local/bin` so you can type `proxychk` from any directory:
 
 ```bash
 sudo bash install.sh
 ```
 
-Or install for user local bin:
+*(Optional: To run without root privileges, run `bash install.sh` to install to `~/.local/bin`)*
 
-```bash
-bash install.sh
-```
+#### 🪟 Option B: Windows Setup (PowerShell)
 
-### Windows (PowerShell)
-
-Open PowerShell and execute:
+Open **PowerShell** inside the `proxychk` folder and run:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File install.ps1
 ```
 
-### Python / pip (Any System)
+*(Note: Restart your PowerShell terminal after installation to refresh your system PATH variable)*
+
+#### 🍎 Option C: macOS Setup
+
+```bash
+sudo bash install.sh
+```
+
+#### 🐍 Option D: Universal Python / Pip Install (Any OS)
 
 ```bash
 pip install .
@@ -56,36 +85,48 @@ pip install .
 
 ---
 
-## 💡 Quick Start & Usage
+## 🚀 Usage & Examples
 
+Once installed, `proxychk` can be launched directly from **any directory** in your terminal!
+
+### 1. Basic Scan (Default Target & Timeout)
 ```bash
-# Basic scan (uses default target http://httpbin.org/ip and 5s timeout)
 proxychk proxies.csv
+```
 
-# Custom target URL
+### 2. Test Against a Custom Endpoint
+```bash
 proxychk proxies.csv https://example.com
+```
 
-# Custom target URL + timeout (3 seconds)
+### 3. Custom Timeout (e.g., 3 Seconds per Proxy)
+```bash
 proxychk proxies.csv https://example.com 3
+```
 
-# High performance multi-threaded scan (10 threads, 3s timeout)
+### 4. High Performance Multi-Threaded Scan ⚡
+Scan large proxy lists concurrently (**10 worker threads**, **3s timeout**):
+```bash
 proxychk proxies.csv http://httpbin.org/ip 3 10
+```
 
-# Using flags
+### 5. Using Command Flags
+```bash
+# Set target (-u), timeout (-w), threads (-t), and custom output file (-o)
 proxychk -t 20 -w 3 -u https://httpbin.org/ip -o live_proxies.txt proxies.csv
 ```
 
 ---
 
-## 🚩 Command Flags
+## 🚩 Command Line Options & Flags
 
 | Flag | Long Flag | Description | Default |
 |---|---|---|---|
-| `-h` | `--help` | Show usage menu and supported CSV fields | — |
-| `-v` | `--version` | Display version and author info | — |
-| `-u` | `--target` | Endpoint URL to test proxies against | `http://httpbin.org/ip` |
+| `-h` | `--help` | Show help menu and supported CSV fields | — |
+| `-v` | `--version` | Display tool version and author info | — |
+| `-u` | `--target` | Target URL to test proxies against | `http://httpbin.org/ip` |
 | `-w` | `--timeout` | Seconds per proxy attempt before timing out | `5` |
-| `-t` | `--threads` | Number of concurrent threads | `1` |
+| `-t` | `--threads` | Number of concurrent worker threads | `1` |
 | `-o` | `--output` | Custom destination file for working proxies | `working_proxies_TIMESTAMP.txt` |
 
 ---
@@ -113,12 +154,13 @@ proxychk -t 20 -w 3 -u https://httpbin.org/ip -o live_proxies.txt proxies.csv
 
 ## 🗑️ Uninstallation
 
-- **Linux & macOS**: `sudo bash uninstall.sh`
+- **Linux / Kali / macOS**: `sudo bash uninstall.sh`
 - **Windows**: `powershell -ExecutionPolicy Bypass -File uninstall.ps1`
 
 ---
 
 ## 👤 Author & License
 
-- **Author**: Mithun A
-- **License**: MIT License
+- **Author / Origin**: Mithun A ([@Mithun202008](https://github.com/Mithun202008))
+- **Repository**: [https://github.com/Mithun202008/proxychk](https://github.com/Mithun202008/proxychk)
+- **License**: Open Source under the [MIT License](LICENSE)
