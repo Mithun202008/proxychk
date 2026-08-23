@@ -1,0 +1,6 @@
+ip,port,protocols,country,anonymityLevel,asn,org,isp,latency,speed,upTime,updated_at
+185.199.229.156,8080,http,US,transparent,AS14061,DigitalOcean,DigitalOcean,120,450KB/s,98.5%,2026-08-23T10:00:00Z
+104.248.63.15,3128,https,DE,anonymous,AS14061,DigitalOcean,DigitalOcean,85,890KB/s,99.1%,2026-08-23T10:15:00Z
+198.51.100.42,1080,socks5,FR,elite,AS12876,ONLINE S.A.S.,Online SAS,140,320KB/s,95.0%,2026-08-23T10:20:00Z
+192.0.2.1,80,http,GB,transparent,AS51167,Contabo GmbH,Contabo,210,150KB/s,92.4%,2026-08-23T10:25:00Z
+203.0.113.88,4145,socks4,JP,anonymous,AS2514,NTT Communications,NTT,195,610KB/s,96.8%,2026-08-23T10:30:00Z
