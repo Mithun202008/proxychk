@@ -220,8 +220,7 @@ def run_updater():
                 except Exception:
                     pass
             print(f"\n{RED}[!]{RESET} Permission denied while updating {target_path}")
-            print(f"{RED}[!]{RESET} Please run update with elevated permissions: {BOLD}sudo $(which proxc) --update{RESET}
-"
+            print(f"{RED}[!]{RESET} Please run update with elevated permissions: {BOLD}sudo $(which proxc) --update{RESET}\n")
             sys.exit(1)
         except Exception as e:
             print(f"\n{RED}[!]{RESET} Update failed: {e}\n")
