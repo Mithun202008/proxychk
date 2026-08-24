@@ -53,6 +53,11 @@ fi
 cp "${ROOT_DIR}/${TOOL}" "${TARGET_DIR}/${TOOL}"
 chmod +x "${TARGET_DIR}/${TOOL}"
 
+# Create symlink in /usr/bin for universal sudo PATH compatibility
+if [[ $EUID -eq 0 ]] && [[ "${TARGET_DIR}" != "/usr/bin" ]] && [[ -d "/usr/bin" ]]; then
+    ln -sf "${TARGET_DIR}/${TOOL}" "/usr/bin/${TOOL}" 2>/dev/null || true
+fi
+
 echo -e "  ${GREEN}[✔] Installed binary →  ${TARGET_DIR}/${TOOL}${RESET}"
 echo -e "  ${GREEN}[✔] Python Runtime  →  $(${PYTHON_CMD} --version)${RESET}"
 echo ""
