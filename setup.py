@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="proxc",
-    version="1.0.0",
+    version="1.0.2",
     description="Smart Proxy Liveness Checker with streaming output",
     author="Mithun A",
     url="https://github.com/Mithun202008/proxychk",

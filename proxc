@@ -2,7 +2,7 @@
 # ================================================================
 #  PROXC — Proxy Validation & Analysis Engine
 #  Author  : Mithun A
-#  Version : 1.0.0
+#  Version : 1.0.2
 #  License : MIT
 #  GitHub  : https://github.com/Mithun202008/proxychk
 # ================================================================
@@ -32,7 +32,7 @@ if hasattr(sys.stdout, 'reconfigure'):
     except Exception:
         pass
 
-VERSION = "1.0.0"
+VERSION = "1.0.2"
 AUTHOR = "Mithun A"
 TOOL = "proxc"
 GITHUB_REPO = "Mithun202008/proxychk"
@@ -78,19 +78,23 @@ def slide_in_line(line, delay=0.002):
 # ---------- Banner ----------
 def show_banner():
     banner_lines = [
-        "    ____  ____   ____  ______",
-        "   / __ \\/ __ \\ / __ \\/ ____/",
-        "  / /_/ / /_/ / / / / / /    ",
-        " / ____/ _, _/ / /_/ / /___  ",
-        "/_/   /_/ |_|\\____/\\____/    ",
+        r"██████╗ ██████╗  ██████╗ ██╗  ██╗ ██████╗",
+        r"██╔══██╗██╔══██╗██╔═══██╗╚██╗██╔╝██╔════╝",
+        r"██████╔╝██████╔╝██║   ██║ ╚███╗  ██║     ",
+        r"██╔═══╝ ██╔══██╗██║   ██║ ██╔██╗ ██║     ",
+        r"██║     ██║  ██║╚██████╔╝██╔╝ ██╗╚██████╗",
+        r"╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝",
     ]
     print(f"{CYAN}{BOLD}")
     for line in banner_lines:
         slide_in_line(line)
     print(f"{RESET}", end="")
-    print(f"\n              {BOLD}{CYAN}PROXC{RESET}")
-    print(f"        {DIM}Proxy Checking Toolkit{RESET}")
-    print(f"             {DIM}v{VERSION}{RESET}\n")
+    print(f"                 {BOLD}{CYAN}PROXC{RESET}")
+    print(f"        {DIM}--------------------------------{RESET}")
+    print(f"        {DIM}Proxy & Security Toolkit{RESET}")
+    print(f"        {DIM}Version : {VERSION}{RESET}")
+    print(f"        {DIM}Author  : {AUTHOR}{RESET}")
+    print(f"        {DIM}--------------------------------{RESET}\n")
 
 # ---------- Usage / No-Argument Menu ----------
 def show_usage_menu():
@@ -125,7 +129,7 @@ def show_help():
 
 # ---------- Version ----------
 def show_version():
-    print(f"PROXC version {VERSION}")
+    print(VERSION)
     sys.exit(0)
 
 # ---------- Parse Version Tuple for Semantic Versioning ----------
