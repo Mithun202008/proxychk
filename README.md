@@ -1,14 +1,15 @@
-# PROXYCHK — Proxy Validation & Analysis Engine
+# PROXC — Proxy Validation & Analysis Engine
 
 ```text
- ____   ____    ___   __  __    ____ 
-|  _ \ |  _ \  / _ \  \ \/ /  / ___|
-| |_) || |_) || | | |  \  /  | |    
-|  __/ |  _ < | |_| |  /  \  | |___ 
-|_|    |_| \_\ \___/  /_/\_\  \____|
+    ____  ____   ____  ______
+   / __ \/ __ \ / __ \/ ____/
+  / /_/ / /_/ / / / / / /
+ / ____/ _, _/ / /_/ / /___
+/_/   /_/ |_|\____/\____/
 
-  PROXYCHK v1.0.0 — Proxy Validation & Analysis Engine
-  Author: Mithun A | GitHub: https://github.com/Mithun202008/proxychk
+              PROXC
+        Proxy Checking Toolkit
+             v1.0.0
 ```
 
 [![Python 3.6+](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/downloads/)
@@ -16,15 +17,15 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Open Source](https://img.shields.io/badge/Open%20Source-%E2%9D%A4-red.svg)]()
 
-**PROXYCHK** is a high-performance, zero-dependency, cross-platform CLI tool for validating proxies. It supports both **bulk list files (CSV, TXT, LST)** and **single proxy checks** (with optional authentication), featuring real-time streaming output, intelligent CSV field auto-detection, multi-threaded checking, full HTTP/HTTPS/SOCKS4/SOCKS5 protocol support, and comprehensive metadata detail cards.
+**PROXC** is a high-performance, zero-dependency, cross-platform CLI tool for validating proxies. It supports both **bulk list files (CSV, TXT, LST)** and **single proxy checks** (with optional authentication), featuring real-time streaming output, intelligent CSV field auto-detection, multi-threaded checking, full HTTP/HTTPS/SOCKS4/SOCKS5 protocol support, built-in self-updater, and comprehensive metadata detail cards.
 
 ---
 
 ## 📁 Repository Structure
 
 ```text
-proxychk/
-├── proxychk                # Main cross-platform Python CLI binary engine
+proxc/
+├── proxc                   # Main cross-platform Python CLI engine
 ├── setup.py                # Standard Python package setup
 ├── README.md               # Repository documentation
 ├── LICENSE                 # Open-source MIT License
@@ -34,7 +35,7 @@ proxychk/
 │   ├── uninstall.sh        # Linux & macOS uninstaller
 │   ├── install.ps1         # Windows PowerShell installer
 │   ├── uninstall.ps1       # Windows PowerShell uninstaller
-│   └── proxychk.cmd        # Windows CMD/PowerShell helper launcher
+│   └── proxc.cmd           # Windows CMD/PowerShell helper launcher
 └── examples/               # Sample CSV proxy lists
     ├── proxies.csv         # Standard test proxy list
     └── Free_Proxy_List.csv # Multi-column test proxy list
@@ -69,7 +70,7 @@ Select your operating system for direct step-by-step installation instructions:
 
 3. **Verify installation**:
    ```bash
-   proxychk --help
+   proxc --help
    ```
 
 ---
@@ -89,7 +90,7 @@ Select your operating system for direct step-by-step installation instructions:
 
 3. **Restart PowerShell** to refresh your PATH variable, then test:
    ```powershell
-   proxychk --help
+   proxc --help
    ```
 
 ---
@@ -109,14 +110,14 @@ Select your operating system for direct step-by-step installation instructions:
 
 3. **Verify installation**:
    ```bash
-   proxychk --help
+   proxc --help
    ```
 
 ---
 
 ### 🐍 Universal Python / Pip Installation
 
-You can also install `proxychk` directly via Python standard package installer on any operating system:
+You can also install `proxc` directly via Python standard package installer on any operating system:
 
 ```bash
 git clone https://github.com/Mithun202008/proxychk.git
@@ -128,39 +129,53 @@ pip install .
 
 ## 🚀 Usage & Examples
 
-Once installed, `proxychk` can be executed from **any directory** in your terminal!
+Once installed, `proxc` can be executed from **any directory** in your terminal!
 
-### 1. Single Proxy Check Mode
+### 1. Zero-Argument Launch (Usage Menu)
+```bash
+proxc
+```
+
+### 2. Single Proxy Check Mode
 ```bash
 # Check an IP and Port directly
-proxychk 1.2.3.4 8080
+proxc 1.2.3.4 8080
 
 # Check an IP and Port with specific protocol
-proxychk 1.2.3.4 8080 socks5
+proxc 1.2.3.4 8080 socks5
 
 # Check authenticated proxy (URI or host:port:user:pass)
-proxychk socks5://user:pass@1.2.3.4:1080
-proxychk 1.2.3.4:8080:username:password
+proxc socks5://user:pass@1.2.3.4:1080
+proxc 1.2.3.4:8080:username:password
 ```
 
-### 2. Bulk File Scan Mode (CSV or TXT)
+### 3. Bulk File Scan Mode (CSV or TXT)
 ```bash
 # Scan a CSV file
-proxychk examples/proxies.csv
+proxc examples/proxies.csv
 
 # Scan a plain text list (ip:port line-by-line)
-proxychk my_proxies.txt
+proxc my_proxies.txt
 ```
 
-### 3. Custom Target & Multi-Threaded Scan ⚡
+### 4. Custom Target & Multi-Threaded Scan ⚡
 ```bash
 # Scan with custom endpoint, 3s timeout, 10 concurrent worker threads
-proxychk examples/proxies.csv https://example.com 3 10
+proxc examples/proxies.csv https://example.com 3 10
 ```
 
-### 4. Using Command Flags
+### 5. Using Command Flags
 ```bash
-proxychk -t 20 -w 3 -u https://httpbin.org/ip -o live_proxies.txt examples/proxies.csv
+proxc -t 20 -w 3 -u https://httpbin.org/ip -o live_proxies.txt examples/proxies.csv
+```
+
+### 6. Version & Self-Update Command 🔄
+```bash
+# Display installed PROXC version
+proxc --version
+
+# Self-update PROXC from official GitHub repository
+proxc --update
 ```
 
 ---
@@ -169,18 +184,19 @@ proxychk -t 20 -w 3 -u https://httpbin.org/ip -o live_proxies.txt examples/proxi
 
 | Flag | Long Flag | Description | Default |
 |---|---|---|---|
-| `-h` | `--help` | Show help menu and supported CSV fields | — |
-| `-v` | `--version` | Display tool version and author info | — |
-| `-u` | `--target` | Target URL to test proxies against | `http://httpbin.org/ip` |
+| `-h` | `--help` | Show help menu and usage information | — |
+| `-v` | `--version` | Display installed PROXC version number | — |
+| `-u` | `--update` | Update PROXC directly from official GitHub repository | — |
+| `-t` | `--target` | Target URL to test proxies against | `http://httpbin.org/ip` |
 | `-w` | `--timeout` | Seconds per proxy attempt before timing out | `5` |
-| `-t` | `--threads` | Number of concurrent worker threads | `1` |
+| `--threads` | `--threads` | Number of concurrent worker threads | `1` |
 | `-o` | `--output` | Custom destination file for working proxies | `working_proxies_TIMESTAMP.txt` |
 
 ---
 
 ## 📋 Supported CSV Fields
 
-`proxychk` automatically detects headers in your CSV regardless of column order or naming conventions:
+`proxc` automatically detects headers in your CSV regardless of column order or naming conventions:
 
 | Property | Supported Header Names |
 |---|---|
@@ -201,12 +217,12 @@ proxychk -t 20 -w 3 -u https://httpbin.org/ip -o live_proxies.txt examples/proxi
 
 ## 🔄 How to Upgrade / Update
 
-Users who have installed `proxychk` can upgrade to the latest release anytime using any of these methods:
+Users who have installed `proxc` can upgrade to the latest release anytime using any of these methods:
 
-### Method 1: Automatic CLI Update (Recommended)
+### Method 1: Automatic Built-In Updater (Recommended)
 Run the built-in update command in your terminal from anywhere:
 ```bash
-proxychk --update
+proxc --update
 ```
 
 ### Method 2: Git Repository Update

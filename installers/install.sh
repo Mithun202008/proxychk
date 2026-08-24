@@ -1,11 +1,11 @@
 #!/bin/bash
 # ================================================================
-#  proxychk — Linux / macOS System-Wide Installer
+#  PROXC — Linux / macOS System-Wide Installer
 #  Author  : Mithun A
 #  Version : v1.0.0
 # ================================================================
 
-TOOL="proxychk"
+TOOL="proxc"
 DEFAULT_INSTALL_DIR="/usr/local/bin"
 USER_INSTALL_DIR="${HOME}/.local/bin"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -19,7 +19,7 @@ DIM='\033[2m'
 RESET='\033[0m'
 
 echo ""
-echo -e "  ${CYAN}${BOLD}proxychk — System Installer (Linux / macOS)${RESET}"
+echo -e "  ${CYAN}${BOLD}PROXC — System Installer (Linux / macOS)${RESET}"
 echo -e "  ${DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo ""
 
@@ -56,10 +56,10 @@ chmod +x "${TARGET_DIR}/${TOOL}"
 echo -e "  ${GREEN}[✔] Installed binary →  ${TARGET_DIR}/${TOOL}${RESET}"
 echo -e "  ${GREEN}[✔] Python Runtime  →  $(${PYTHON_CMD} --version)${RESET}"
 echo ""
-echo -e "  ${BOLD}You can now run proxychk from anywhere:${RESET}"
-echo -e "  ${CYAN}  proxychk examples/proxies.csv${RESET}"
-echo -e "  ${CYAN}  proxychk examples/proxies.csv https://example.com 3${RESET}"
-echo -e "  ${CYAN}  proxychk --help${RESET}"
+echo -e "  ${BOLD}You can now run proxc from anywhere:${RESET}"
+echo -e "  ${CYAN}  proxc examples/proxies.csv${RESET}"
+echo -e "  ${CYAN}  proxc examples/proxies.csv https://example.com 3${RESET}"
+echo -e "  ${CYAN}  proxc --help${RESET}"
 echo ""
 echo -e "  ${DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo ""

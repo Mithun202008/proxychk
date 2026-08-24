@@ -1,15 +1,15 @@
 from setuptools import setup
 
 setup(
-    name="proxychk",
+    name="proxc",
     version="1.0.0",
-    description="Smart Proxy Liveness Checker with dirb-style streaming output",
+    description="Smart Proxy Liveness Checker with streaming output",
     author="Mithun A",
     url="https://github.com/Mithun202008/proxychk",
-    scripts=["proxychk"],
+    scripts=["proxc"],
     entry_points={
         'console_scripts': [
-            'proxychk=proxychk:main',
+            'proxc=proxc:main',
         ],
     },
     python_requires=">=3.6",

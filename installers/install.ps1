@@ -1,5 +1,5 @@
 # ================================================================
-#  proxychk — Windows Installer (PowerShell)
+#  PROXC — Windows Installer (PowerShell)
 #  Author  : Mithun A
 #  Version : v1.0.0
 # ================================================================
@@ -7,7 +7,7 @@
 $ErrorActionPreference = "Stop"
 
 Write-Host ""
-Write-Host "  proxychk - Windows System Installer" -ForegroundColor Cyan
+Write-Host "  PROXC - Windows System Installer" -ForegroundColor Cyan
 Write-Host "  =====================================================" -ForegroundColor DarkGray
 Write-Host ""
 
@@ -20,7 +20,7 @@ try {
     exit 1
 }
 
-$installDir = Join-Path $env:LocalAppData "Programs\proxychk"
+$installDir = Join-Path $env:LocalAppData "Programs\proxc"
 if (-not (Test-Path $installDir)) {
     New-Item -ItemType Directory -Path $installDir -Force | Out-Null
 }
@@ -31,12 +31,12 @@ if (-not $scriptDir) {
 }
 $rootDir = (Resolve-Path (Join-Path $scriptDir "..")).Path
 
-$srcProxychk = Join-Path $rootDir "proxychk"
-$srcCmd = Join-Path $scriptDir "proxychk.cmd"
-$destProxychk = Join-Path $installDir "proxychk"
-$destCmd = Join-Path $installDir "proxychk.cmd"
+$srcProxc = Join-Path $rootDir "proxc"
+$srcCmd = Join-Path $scriptDir "proxc.cmd"
+$destProxc = Join-Path $installDir "proxc"
+$destCmd = Join-Path $installDir "proxc.cmd"
 
-Copy-Item -Path $srcProxychk -Destination $destProxychk -Force
+Copy-Item -Path $srcProxc -Destination $destProxc -Force
 Copy-Item -Path $srcCmd -Destination $destCmd -Force
 
 Write-Host "  OK: Installed binary -> $installDir" -ForegroundColor Green
@@ -56,10 +56,10 @@ if ($userPath.IndexOf($installDir) -eq -1) {
 }
 
 Write-Host ""
-Write-Host "  You can now run proxychk from anywhere in a new terminal:" -ForegroundColor Yellow
-Write-Host "    proxychk examples/proxies.csv" -ForegroundColor Cyan
-Write-Host "    proxychk examples/proxies.csv https://example.com 3" -ForegroundColor Cyan
-Write-Host "    proxychk --help" -ForegroundColor Cyan
+Write-Host "  You can now run proxc from anywhere in a new terminal:" -ForegroundColor Yellow
+Write-Host "    proxc examples/proxies.csv" -ForegroundColor Cyan
+Write-Host "    proxc examples/proxies.csv https://example.com 3" -ForegroundColor Cyan
+Write-Host "    proxc --help" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  =====================================================" -ForegroundColor DarkGray
 Write-Host ""

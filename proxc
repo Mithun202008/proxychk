@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ================================================================
-#  proxychk — Proxy Validation & Analysis Engine
+#  PROXC — Proxy Validation & Analysis Engine
 #  Author  : Mithun A
 #  Version : 1.0.0
 #  License : MIT
@@ -19,6 +19,8 @@ import struct
 import argparse
 import base64
 import shutil
+import urllib.request
+import urllib.error
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -32,7 +34,8 @@ if hasattr(sys.stdout, 'reconfigure'):
 
 VERSION = "1.0.0"
 AUTHOR = "Mithun A"
-TOOL = "proxychk"
+TOOL = "proxc"
+GITHUB_REPO = "Mithun202008/proxychk"
 
 # ---------- Enable ANSI colors on Windows PowerShell / CMD ----------
 def enable_windows_ansi():
@@ -75,57 +78,156 @@ def slide_in_line(line, delay=0.002):
 # ---------- Banner ----------
 def show_banner():
     banner_lines = [
-        " ____   ____    ___   __  __    ____ ",
-        "|  _ \\ |  _ \\  / _ \\  \\ \\/ /  / ___|",
-        "| |_) || |_) || | | |  \\  /  | |    ",
-        "|  __/ |  _ < | |_| |  /  \\  | |___ ",
-        "|_|    |_| \\_\\ \\___/  /_/\\_\\  \\____|",
+        "    ____  ____   ____  ______",
+        "   / __ \\/ __ \\ / __ \\/ ____/",
+        "  / /_/ / /_/ / / / / / /    ",
+        " / ____/ _, _/ / /_/ / /___  ",
+        "/_/   /_/ |_|\\____/\\____/    ",
     ]
     print(f"{CYAN}{BOLD}")
     for line in banner_lines:
         slide_in_line(line)
     print(f"{RESET}", end="")
-    print(f"  {BOLD}{CYAN}PROXYCHK{RESET} {DIM}v{VERSION}{RESET}  —  Proxy Validation & Analysis Engine")
-    print(f"  {DIM}Author: {AUTHOR}  |  https://github.com/Mithun202008/proxychk{RESET}")
+    print(f"\n              {BOLD}{CYAN}PROXC{RESET}")
+    print(f"        {DIM}Proxy Checking Toolkit{RESET}")
+    print(f"             {DIM}v{VERSION}{RESET}\n")
+
+# ---------- Usage / No-Argument Menu ----------
+def show_usage_menu():
+    show_banner()
+    print(f"  {BOLD}Usage:{RESET}")
+    print(f"    {CYAN}proxc{RESET} [OPTIONS] <TARGET>")
+    print(f"    {CYAN}proxc{RESET} <file.csv|file.txt> [target_url] [timeout] [threads]")
+    print(f"    {CYAN}proxc{RESET} <ip|host> <port> [protocol/target_url] [timeout]")
+    print(f"    {CYAN}proxc{RESET} <proto://[user:pass@]host:port>\n")
+    print(f"  {BOLD}Options:{RESET}")
+    print(f"    {CYAN}-h, --help{RESET}       Show this help menu")
+    print(f"    {CYAN}-v, --version{RESET}    Show installed PROXC version")
+    print(f"    {CYAN}-u, --update{RESET}     Update PROXC to the latest version")
+    print(f"    {CYAN}-t, --target{RESET}     Set target URL (default: http://httpbin.org/ip)")
+    print(f"    {CYAN}-w, --timeout{RESET}    Set timeout in seconds (default: 5)")
+    print(f"    {CYAN}--threads{RESET}        Set concurrent worker threads (default: 1)")
+    print(f"    {CYAN}-o, --output{RESET}     Custom output filename for working proxies\n")
+    print(f"  {BOLD}Examples:{RESET}")
+    print(f"    {DIM}proxc proxies.csv{RESET}")
+    print(f"    {DIM}proxc proxy_list.txt{RESET}")
+    print(f"    {DIM}proxc 1.2.3.4 8080{RESET}")
+    print(f"    {DIM}proxc 1.2.3.4 8080 socks5{RESET}")
+    print(f"    {DIM}proxc socks5://user:pass@1.2.3.4:1080{RESET}")
+    print(f"    {DIM}proxc --version{RESET}")
+    print(f"    {DIM}proxc --update{RESET}\n")
     print(f"  {DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{RESET}\n")
 
-# ---------- Help ----------
+# ---------- Help Menu ----------
 def show_help():
-    show_banner()
-    print(f"  {BOLD}USAGE{RESET}")
-    print(f"    {CYAN}proxychk{RESET} <file.csv|file.txt> [target_url] [timeout] [threads]")
-    print(f"    {CYAN}proxychk{RESET} <ip|host> <port> [protocol/target_url] [timeout]")
-    print(f"    {CYAN}proxychk{RESET} <proto://[user:pass@]host:port>\n")
-    print(f"  {BOLD}ARGUMENTS{RESET}")
-    print(f"    {BOLD}input{RESET}          CSV/TXT file path OR single IP / host / proxy string")
-    print(f"    {BOLD}target_url{RESET}     URL to test proxies against (default: http://httpbin.org/ip)")
-    print(f"    {BOLD}timeout{RESET}        Seconds per proxy before timing out (default: 5)")
-    print(f"    {BOLD}threads{RESET}        Concurrent worker threads for list scans (default: 1, max: 50)\n")
-    print(f"  {BOLD}OPTIONS / FLAGS{RESET}")
-    print(f"    {CYAN}-h, --help{RESET}       Show this help menu")
-    print(f"    {CYAN}-v, --version{RESET}    Show tool version number")
-    print(f"    {CYAN}-u, --target{RESET}     Set target URL (e.g. https://example.com)")
-    print(f"    {CYAN}-w, --timeout{RESET}    Set socket timeout in seconds")
-    print(f"    {CYAN}-t, --threads{RESET}    Set number of concurrent worker threads")
-    print(f"    {CYAN}-o, --output{RESET}     Custom output filename for working proxies\n")
-    print(f"  {BOLD}EXAMPLES{RESET}")
-    print(f"    {DIM}proxychk proxies.csv{RESET}")
-    print(f"    {DIM}proxychk proxy_list.txt{RESET}")
-    print(f"    {DIM}proxychk 1.2.3.4 8080{RESET}")
-    print(f"    {DIM}proxychk 1.2.3.4 8080 socks5{RESET}")
-    print(f"    {DIM}proxychk socks5://user:pass@1.2.3.4:1080{RESET}")
-    print(f"    {DIM}proxychk 1.2.3.4:8080:username:password{RESET}")
-    print(f"    {DIM}proxychk proxies.csv https://example.com 3 10{RESET}\n")
-    print(f"  {BOLD}SUPPORTED CSV FIELDS / TXT FORMATS{RESET}")
-    print(f"    CSV columns: ip, port, protocol, username, password, country, anonymity, isp...")
-    print(f"    TXT formats: host:port, proto://host:port, user:pass@host:port, host:port:user:pass\n")
-    print(f"  {DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{RESET}\n")
+    show_usage_menu()
     sys.exit(0)
 
 # ---------- Version ----------
 def show_version():
-    print(VERSION)
+    print(f"PROXC version {VERSION}")
     sys.exit(0)
+
+# ---------- Parse Version Tuple for Semantic Versioning ----------
+def parse_version_tuple(v_str):
+    if not v_str:
+        return (0, 0, 0)
+    cleaned = v_str.strip().lstrip('vV')
+    parts = [int(x) for x in re.findall(r'\d+', cleaned)]
+    return tuple(parts) if parts else (0, 0, 0)
+
+# ---------- Updater ----------
+def run_updater():
+    banner_lines = [
+        "    ____  ____   ____  ______",
+        "   / __ \\/ __ \\ / __ \\/ ____/",
+        "  / /_/ / /_/ / / / / / /    ",
+        " / ____/ _, _/ / /_/ / /___  ",
+        "/_/   /_/ |_|\\____/\\____/    ",
+    ]
+    print(f"{CYAN}{BOLD}")
+    for line in banner_lines:
+        print(line)
+    print(f"{RESET}", end="")
+    print(f"\n{BOLD}PROXC Updater{RESET}\n")
+
+    print(f"{CYAN}[+]{RESET} Checking current version...")
+    print(f"{CYAN}[+]{RESET} Current version: {VERSION}")
+    print(f"{CYAN}[+]{RESET} Checking GitHub for latest version...")
+
+    latest_version = None
+    download_url = None
+
+    headers = {'User-Agent': f'proxc/{VERSION}'}
+
+    # 1. Try Releases API
+    try:
+        api_url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+        req = urllib.request.Request(api_url, headers=headers)
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            data = json.loads(resp.read().decode('utf-8'))
+            latest_version = data.get('tag_name', '').lstrip('vV')
+            download_url = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/proxc"
+    except Exception:
+        pass
+
+    # 2. Fallback to raw main proxc file version check if API check didn't produce a version
+    if not latest_version:
+        try:
+            raw_url = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/proxc"
+            req = urllib.request.Request(raw_url, headers=headers)
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                content = resp.read().decode('utf-8', errors='replace')
+                v_match = re.search(r'VERSION\s*=\s*["\']([^"\']+)["\']', content)
+                if v_match:
+                    latest_version = v_match.group(1)
+                    download_url = raw_url
+        except Exception:
+            pass
+
+    if not latest_version:
+        print(f"\n{RED}[!]{RESET} Unable to check for updates.")
+        print(f"{RED}[!]{RESET} Please check your internet connection.\n")
+        sys.exit(1)
+
+    print(f"{CYAN}[+]{RESET} Latest version: {latest_version}\n")
+
+    current_tuple = parse_version_tuple(VERSION)
+    latest_tuple = parse_version_tuple(latest_version)
+
+    if latest_tuple > current_tuple:
+        print(f"{GREEN}[+]{RESET} Update available.")
+        print(f"{GREEN}[+]{RESET} Updating PROXC...")
+
+        try:
+            req = urllib.request.Request(download_url, headers=headers)
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                new_code = resp.read().decode('utf-8')
+
+            target_path = os.path.realpath(sys.argv[0])
+            # If sys.argv[0] is not writable or points to python interpreter / module wrapper
+            if not os.path.isfile(target_path) or not target_path.endswith('proxc'):
+                target_path = shutil.which('proxc') or target_path
+
+            tmp_path = target_path + ".tmp"
+            with open(tmp_path, 'w', encoding='utf-8') as f:
+                f.write(new_code)
+
+            shutil.move(tmp_path, target_path)
+            if os.name != 'nt':
+                os.chmod(target_path, 0o755)
+
+            print(f"\n{GREEN}[+]{RESET} Update completed successfully.\n")
+        except PermissionError:
+            print(f"\n{RED}[!]{RESET} Permission denied while updating {target_path}")
+            print(f"{RED}[!]{RESET} Please run update with elevated permissions (e.g. sudo proxc --update).\n")
+            sys.exit(1)
+        except Exception as e:
+            print(f"\n{RED}[!]{RESET} Update failed: {e}\n")
+            sys.exit(1)
+    else:
+        print(f"{GREEN}[✓]{RESET} PROXC is already up to date.\n")
+        sys.exit(0)
 
 # ---------- Resolve Protocol ----------
 def resolve_protocol(raw):
@@ -249,7 +351,7 @@ def check_proxy(ip, port, proto, target_url, timeout, username="", password=""):
         elif proto == 'https':
             # HTTP CONNECT Tunnel
             sock.connect((ip, port_num))
-            connect_req = f"CONNECT {host}:{target_port} HTTP/1.1\r\nHost: {host}:{target_port}\r\nUser-Agent: proxychk/{VERSION}\r\n{auth_header}\r\n"
+            connect_req = f"CONNECT {host}:{target_port} HTTP/1.1\r\nHost: {host}:{target_port}\r\nUser-Agent: proxc/{VERSION}\r\n{auth_header}\r\n"
             sock.sendall(connect_req.encode())
             
             response = b""
@@ -276,9 +378,9 @@ def check_proxy(ip, port, proto, target_url, timeout, username="", password=""):
 
         # Send HTTP GET Request
         if proto in ['socks5', 'socks4', 'https']:
-            http_req = f"GET {path} HTTP/1.1\r\nHost: {host}\r\nUser-Agent: proxychk/{VERSION}\r\nAccept: */*\r\nConnection: close\r\n\r\n"
+            http_req = f"GET {path} HTTP/1.1\r\nHost: {host}\r\nUser-Agent: proxc/{VERSION}\r\nAccept: */*\r\nConnection: close\r\n\r\n"
         else:
-            http_req = f"GET {full_url} HTTP/1.1\r\nHost: {host}\r\nUser-Agent: proxychk/{VERSION}\r\n{auth_header}Accept: */*\r\nConnection: close\r\n\r\n"
+            http_req = f"GET {full_url} HTTP/1.1\r\nHost: {host}\r\nUser-Agent: proxc/{VERSION}\r\n{auth_header}Accept: */*\r\nConnection: close\r\n\r\n"
 
         sock.sendall(http_req.encode())
 
@@ -423,7 +525,13 @@ def parse_proxy_string(line):
 def main():
     raw_args = sys.argv[1:]
 
-    # Early Flags
+    # Early Flags & Update Command
+    if not raw_args:
+        show_usage_menu()
+        sys.exit(0)
+    if any(arg in ['--update', '-u'] and arg == raw_args[0] for arg in raw_args) or raw_args == ['--update']:
+        run_updater()
+        sys.exit(0)
     if any(arg in ['-h', '--help', 'help'] for arg in raw_args):
         show_help()
     if any(arg in ['-v', '--version'] for arg in raw_args):
@@ -440,8 +548,13 @@ def main():
     parser.add_argument('-w', '--timeout', type=int, default=None)
     parser.add_argument('-t', '--threads', type=int, default=None)
     parser.add_argument('-o', '--output', default=None)
+    parser.add_argument('--update', action='store_true', default=False)
 
     args, _ = parser.parse_known_args()
+
+    if args.update:
+        run_updater()
+        sys.exit(0)
 
     arg1 = args.arg1
     arg2 = args.arg2
@@ -449,12 +562,8 @@ def main():
     arg4 = args.arg4
 
     if not arg1:
-        show_banner()
-        print(f"  {RED}[!] No target file or proxy IP specified.{RESET}\n")
-        print(f"  {BOLD}Usage:{RESET}  proxychk <file.csv|file.txt> [target_url] [timeout] [threads]")
-        print(f"         proxychk <ip|host> <port> [protocol/target_url] [timeout]")
-        print(f"  {DIM}Run  proxychk --help  for full usage.{RESET}\n")
-        sys.exit(1)
+        show_usage_menu()
+        sys.exit(0)
 
     show_banner()
 
@@ -703,7 +812,7 @@ def main():
             outfile = args.output or f"working_proxies_{timestamp}.txt"
             try:
                 with open(outfile, 'w', encoding='utf-8') as f:
-                    f.write(f"# PROXYCHK v{VERSION} — by {AUTHOR}\n")
+                    f.write(f"# PROXC v{VERSION} — by {AUTHOR}\n")
                     f.write(f"# Scanned : {csv_file}  |  Target: {target_url}  |  Date: {datetime.now().ctime()}\n\n")
                     f.write(f"{'IP/HOST':<20} {'PORT':<6} {'TYPE':<7} {'CODE':<5} {'TIME_MS':<8} {'PROXIED_IP':<20} {'AUTH':<15}\n")
                     f.write("─" * 90 + "\n")
