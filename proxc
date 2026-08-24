@@ -2,7 +2,7 @@
 # ================================================================
 #  PROXC — Proxy Validation & Analysis Engine
 #  Author  : Mithun A
-#  Version : 1.0.2
+#  Version : 1.0.3
 #  License : MIT
 #  GitHub  : https://github.com/Mithun202008/proxychk
 # ================================================================
@@ -32,7 +32,7 @@ if hasattr(sys.stdout, 'reconfigure'):
     except Exception:
         pass
 
-VERSION = "1.0.2"
+VERSION = "1.0.3"
 AUTHOR = "Mithun A"
 TOOL = "proxc"
 GITHUB_REPO = "Mithun202008/proxychk"
@@ -71,9 +71,9 @@ def slide_in_line(line, delay=0.002):
         width = 80
     padding = max(width - len(line), 0)
     for i in range(padding, -1, -2):  # step by 2 for smoother/faster slide
-        print(" " * i + line, end="\r")
+        print("\r\033[K" + " " * i + line, end="", flush=True)
         time.sleep(delay)
-    print(" " * 0 + line)  # final position
+    print("\r\033[K" + line)  # final clean position
 
 # ---------- Banner ----------
 def show_banner():

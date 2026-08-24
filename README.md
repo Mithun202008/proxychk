@@ -9,7 +9,7 @@
 
               PROXC
         Proxy Checking Toolkit
-             v1.0.2
+             v1.0.3
 ```
 
 [![Python 3.6+](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/downloads/)
