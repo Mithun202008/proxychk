@@ -1,7 +1,7 @@
 # ================================================================
 #  PROXC — Windows Installer (PowerShell)
 #  Author  : Mithun A
-#  Version : v1.0.11
+#  Version : v1.0.2
 # ================================================================
 
 $ErrorActionPreference = "Stop"
