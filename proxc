@@ -142,18 +142,8 @@ def parse_version_tuple(v_str):
 
 # ---------- Updater ----------
 def run_updater():
-    banner_lines = [
-        "    ____  ____   ____  ______",
-        "   / __ \\/ __ \\ / __ \\/ ____/",
-        "  / /_/ / /_/ / / / / / /    ",
-        " / ____/ _, _/ / /_/ / /___  ",
-        "/_/   /_/ |_|\\____/\\____/    ",
-    ]
-    print(f"{CYAN}{BOLD}")
-    for line in banner_lines:
-        print(line)
-    print(f"{RESET}", end="")
-    print(f"\n{BOLD}PROXC Updater{RESET}\n")
+    show_banner()
+    print(f"{BOLD}PROXC Updater{RESET}\n")
 
     print(f"{CYAN}[+]{RESET} Checking current version...")
     print(f"{CYAN}[+]{RESET} Current version: {VERSION}")
@@ -203,15 +193,14 @@ def run_updater():
         print(f"{GREEN}[+]{RESET} Update available.")
         print(f"{GREEN}[+]{RESET} Updating PROXC...")
 
+        target_path = os.path.realpath(sys.argv[0])
+        if not os.path.isfile(target_path) or not target_path.endswith('proxc'):
+            target_path = shutil.which('proxc') or target_path
+
         try:
             req = urllib.request.Request(download_url, headers=headers)
             with urllib.request.urlopen(req, timeout=15) as resp:
                 new_code = resp.read().decode('utf-8')
-
-            target_path = os.path.realpath(sys.argv[0])
-            # If sys.argv[0] is not writable or points to python interpreter / module wrapper
-            if not os.path.isfile(target_path) or not target_path.endswith('proxc'):
-                target_path = shutil.which('proxc') or target_path
 
             tmp_path = target_path + ".tmp"
             with open(tmp_path, 'w', encoding='utf-8') as f:
@@ -223,17 +212,23 @@ def run_updater():
 
             print(f"\n{GREEN}[+]{RESET} Update completed successfully.\n")
         except PermissionError:
+            if os.name != 'nt' and shutil.which('sudo') and hasattr(os, 'geteuid') and os.geteuid() != 0:
+                print(f"\n{YELLOW}[!]{RESET} Permission denied writing to {target_path}")
+                print(f"{CYAN}[+]{RESET} Relaunching update with sudo (elevated permissions)...\n")
+                try:
+                    os.execvp('sudo', ['sudo', sys.executable, target_path, '--update'])
+                except Exception:
+                    pass
             print(f"\n{RED}[!]{RESET} Permission denied while updating {target_path}")
-            print(f"{RED}[!]{RESET} Please run update with elevated permissions (e.g. sudo proxc --update).\n")
+            print(f"{RED}[!]{RESET} Please run update with elevated permissions: {BOLD}sudo proxc --update{RESET}\n")
             sys.exit(1)
         except Exception as e:
             print(f"\n{RED}[!]{RESET} Update failed: {e}\n")
             sys.exit(1)
     else:
         print(f"{GREEN}[✓]{RESET} PROXC is already up to date.\n")
-        sys.exit(0)
 
-# ---------- Resolve Protocol ----------
+
 def resolve_protocol(raw):
     if not raw:
         return "http"
