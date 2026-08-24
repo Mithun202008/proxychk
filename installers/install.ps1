@@ -32,34 +32,45 @@ if (-not $scriptDir) {
 $rootDir = (Resolve-Path (Join-Path $scriptDir "..")).Path
 
 $srcProxc = Join-Path $rootDir "proxc"
-$srcCmd = Join-Path $scriptDir "proxc.cmd"
+$srcCmd = Join-Path $rootDir "proxc.cmd"
+$srcPs1 = Join-Path $rootDir "proxc.ps1"
+
 $destProxc = Join-Path $installDir "proxc"
 $destCmd = Join-Path $installDir "proxc.cmd"
+$destPs1 = Join-Path $installDir "proxc.ps1"
 
 Copy-Item -Path $srcProxc -Destination $destProxc -Force
-Copy-Item -Path $srcCmd -Destination $destCmd -Force
+if (Test-Path $srcCmd) { Copy-Item -Path $srcCmd -Destination $destCmd -Force }
+if (Test-Path $srcPs1) { Copy-Item -Path $srcPs1 -Destination $destPs1 -Force }
 
 Write-Host "  OK: Installed binary -> $installDir" -ForegroundColor Green
 
+# Update User PATH registry key if missing
 $userPath = [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::User)
-if (-not $userPath) {
-    $userPath = ""
-}
+if (-not $userPath) { $userPath = "" }
 
 if ($userPath.IndexOf($installDir) -eq -1) {
-    $newPath = $userPath + ";" + $installDir
+    $newPath = $userPath.TrimEnd(';') + ";" + $installDir
     [Environment]::SetEnvironmentVariable("Path", $newPath, [EnvironmentVariableTarget]::User)
-    $env:Path = $env:Path + ";" + $installDir
     Write-Host "  OK: Added to User PATH environment variable." -ForegroundColor Green
 } else {
-    Write-Host "  OK: PATH already configured." -ForegroundColor Green
+    Write-Host "  OK: User PATH already configured in Windows Registry." -ForegroundColor Green
+}
+
+# Always update process env:Path for current PowerShell session
+if ($env:Path.IndexOf($installDir) -eq -1) {
+    $env:Path = $env:Path.TrimEnd(';') + ";" + $installDir
+    Write-Host "  OK: Updated PATH for current PowerShell session." -ForegroundColor Green
 }
 
 Write-Host ""
-Write-Host "  You can now run proxc from anywhere in a new terminal:" -ForegroundColor Yellow
+Write-Host "  PROXC is ready! You can run it directly:" -ForegroundColor Yellow
+Write-Host "    proxc" -ForegroundColor Cyan
 Write-Host "    proxc examples/proxies.csv" -ForegroundColor Cyan
-Write-Host "    proxc examples/proxies.csv https://example.com 3" -ForegroundColor Cyan
 Write-Host "    proxc --help" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "  Note: If 'proxc' is not recognized in an ALREADY OPEN terminal window," -ForegroundColor DarkGray
+Write-Host "  open a NEW terminal window or run:  `$env:Path = [System.Environment]::GetEnvironmentVariable('Path','User') + ';' + `$env:Path" -ForegroundColor DarkGray
 Write-Host ""
 Write-Host "  =====================================================" -ForegroundColor DarkGray
 Write-Host ""
