@@ -2,7 +2,7 @@
 rem ================================================================
 rem  PROXC — Windows Command Launcher (Root Repository)
 rem  Author  : Mithun A
-rem  Version : v1.0.3
+rem  Version : v1.0.4
 rem ================================================================
 
 python "%~dp0proxc" %*
