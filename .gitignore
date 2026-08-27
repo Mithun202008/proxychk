@@ -15,3 +15,11 @@ build/
 Thumbs.db
 *.deb
 
+# Debian build artifacts
+.pybuild/
+debian/.debhelper/
+debian/proxc/
+debian/files
+debian/*.substvars
+debian/debhelper-build-stamp
+*.orig.tar.gz

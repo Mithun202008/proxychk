@@ -8,7 +8,7 @@ Homepage: https://github.com/Mithun202008/proxychk
 
 Package: proxc
 Architecture: all
-Depends: ${python3:Depends}, ${misc:Depends}, python3 (>= 3.6)
+Depends: ${python3:Depends}, ${misc:Depends}
 Description: Smart Proxy Liveness Checker and Security Toolkit
  High-performance, zero-dependency, cross-platform CLI tool for validating
  proxies. Supports bulk list files (CSV, TXT, LST) and single proxy checks

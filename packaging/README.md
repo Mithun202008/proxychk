@@ -27,7 +27,7 @@ cd proxychk
 dpkg-buildpackage -us -uc
 ```
 
-The resulting package file `proxc_1.0.4-1_all.deb` will be created in the parent directory.
+The resulting package file `proxc_1.0.5-0kali1_all.deb` will be created in the parent directory.
 
 ---
 
@@ -36,7 +36,7 @@ The resulting package file `proxc_1.0.4-1_all.deb` will be created in the parent
 Run `lintian` against the generated package to verify policy compliance:
 
 ```bash
-lintian ../proxc_1.0.4-1_all.deb
+lintian ../proxc_1.0.5-0kali1_all.deb
 ```
 
 Ensure no errors (`E:`) or warnings (`W:`) are present before submitting for distribution.
@@ -47,7 +47,7 @@ Ensure no errors (`E:`) or warnings (`W:`) are present before submitting for dis
 
 1. **Install locally built package**:
    ```bash
-   sudo apt install ../proxc_1.0.4-1_all.deb
+   sudo apt install ../proxc_1.0.5-0kali1_all.deb
    ```
 
 2. **Verify global command execution**:

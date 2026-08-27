@@ -1,5 +1,11 @@
-proxc (1.0.4-1) unstable; urgency=medium
+proxc (1.0.5-0kali1) kali-dev; urgency=medium
 
-  * Initial release of PROXC Debian and Kali Linux package.
+  * New upstream release v1.0.5.
 
- -- Mithun <mithunanbazhagan@gmail.com>  Thu, 27 Aug 2026 12:45:00 +0530
+ -- Mithun <mithunanbazhagan@gmail.com>  Thu, 27 Aug 2026 14:40:00 +0530
+
+proxc (1.0.4-0kali1) kali-dev; urgency=medium
+
+  * Initial release of PROXC Kali Linux and Debian package.
+
+ -- Mithun <mithunanbazhagan@gmail.com>  Thu, 27 Aug 2026 14:30:00 +0530

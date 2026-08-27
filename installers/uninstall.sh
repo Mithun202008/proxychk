@@ -2,7 +2,7 @@
 # ================================================================
 #  PROXC — Linux / macOS Uninstaller
 #  Author  : Mithun A
-#  Version : v1.0.4
+#  Version : v1.0.5
 # ================================================================
 
 DEFAULT_INSTALL_DIR="/usr/local/bin"
