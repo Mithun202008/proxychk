@@ -1,7 +1,7 @@
 # ================================================================
 #  PROXC — Windows Uninstaller (PowerShell)
 #  Author  : Mithun A
-#  Version : v1.0.4
+#  Version : v1.0.5
 # ================================================================
 
 $ErrorActionPreference = "Continue"
