@@ -19,6 +19,7 @@ import struct
 import argparse
 import base64
 import shutil
+import subprocess
 import urllib.request
 import urllib.error
 from datetime import datetime
@@ -196,6 +197,18 @@ def run_updater():
         target_path = os.path.realpath(sys.argv[0])
         if not os.path.isfile(target_path) or not target_path.endswith('proxc'):
             target_path = shutil.which('proxc') or target_path
+
+        # Check if binary is managed by Debian package manager (dpkg)
+        if os.name != 'nt' and shutil.which('dpkg'):
+            try:
+                res = subprocess.run(['dpkg', '-S', target_path], capture_output=True, text=True)
+                if res.returncode == 0 and 'proxc:' in res.stdout:
+                    print(f"\n{YELLOW}[!]{RESET} PROXC was installed via the Debian package manager (apt/dpkg).")
+                    print(f"{YELLOW}[!]{RESET} Direct self-update is disabled for package-managed installations.")
+                    print(f"{CYAN}[+]{RESET} To update PROXC, please run: {BOLD}sudo apt update && sudo apt upgrade proxc{RESET}\n")
+                    sys.exit(0)
+            except Exception:
+                pass
 
         try:
             req = urllib.request.Request(download_url, headers=headers)

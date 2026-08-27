@@ -1,14 +1,14 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: proxc
-Upstream-Contact: Mithun A <https://github.com/Mithun202008/proxychk>
+Upstream-Contact: Mithun <mithunanbazhagan@gmail.com>
 Source: https://github.com/Mithun202008/proxychk
 
 Files: *
-Copyright: 2024-2026 Mithun A <https://github.com/Mithun202008>
+Copyright: 2024-2026 Mithun A <mithunanbazhagan@gmail.com>
 License: MIT
 
 Files: debian/*
-Copyright: 2026 Mithun A <https://github.com/Mithun202008>
+Copyright: 2026 Mithun <mithunanbazhagan@gmail.com>
 License: MIT
 
 License: MIT
