@@ -11,10 +11,10 @@ import proxc
 class TestProxcUnit(unittest.TestCase):
 
     def test_module_version_variable(self):
-        self.assertEqual(proxc.VERSION, "1.0.5")
+        self.assertEqual(proxc.VERSION, "1.0.6")
 
     def test_version_tuple_parsing(self):
-        self.assertEqual(proxc.parse_version_tuple("1.0.5"), (1, 0, 5))
+        self.assertEqual(proxc.parse_version_tuple("1.0.6"), (1, 0, 6))
         self.assertEqual(proxc.parse_version_tuple("v2.1.0"), (2, 1, 0))
         self.assertEqual(proxc.parse_version_tuple("invalid"), (0, 0, 0))
 
@@ -53,19 +53,19 @@ class TestProxcUnit(unittest.TestCase):
         proxc_bin = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'proxc'))
         res = subprocess.run([sys.executable, proxc_bin, '--version'], capture_output=True, text=True, encoding='utf-8', errors='replace')
         self.assertEqual(res.returncode, 0)
-        self.assertIn("1.0.5", res.stdout)
+        self.assertIn("1.0.6", res.stdout)
 
         proxc_py_bin = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'proxc.py'))
         res_py = subprocess.run([sys.executable, proxc_py_bin, '--version'], capture_output=True, text=True, encoding='utf-8', errors='replace')
         self.assertEqual(res_py.returncode, 0)
-        self.assertIn("1.0.5", res_py.stdout)
+        self.assertIn("1.0.6", res_py.stdout)
 
     def test_cli_help_flag(self):
         proxc_bin = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'proxc'))
         res = subprocess.run([sys.executable, proxc_bin, '--help'], capture_output=True, text=True, encoding='utf-8', errors='replace')
         self.assertEqual(res.returncode, 0)
         self.assertIn("PROXC", res.stdout)
-        self.assertIn("Version : 1.0.5", res.stdout)
+        self.assertIn("Version : 1.0.6", res.stdout)
 
     def test_cli_invalid_input(self):
         proxc_bin = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'proxc'))

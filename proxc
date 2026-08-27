@@ -2,7 +2,7 @@
 # ================================================================
 #  PROXC — Proxy Validation & Analysis Engine
 #  Author  : Mithun A
-#  Version : 1.0.5
+#  Version : 1.0.6
 #  License : MIT
 #  GitHub  : https://github.com/Mithun202008/proxychk
 # ================================================================
@@ -33,7 +33,7 @@ if hasattr(sys.stdout, 'reconfigure'):
     except Exception:
         pass
 
-VERSION = "1.0.5"
+VERSION = "1.0.6"
 AUTHOR = "Mithun A"
 TOOL = "proxc"
 GITHUB_REPO = "Mithun202008/proxychk"

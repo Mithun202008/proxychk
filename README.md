@@ -9,7 +9,7 @@
 
               PROXC
         Proxy Checking Toolkit
-             v1.0.5
+             v1.0.6
 ```
 
 [![Python 3.6+](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/downloads/)
@@ -79,7 +79,7 @@ Select your operating system for direct step-by-step installation instructions:
 
 1. **Install using local `.deb` package**:
    ```bash
-   sudo apt install ./proxc_1.0.5-0kali1_all.deb
+   sudo apt install ./proxc_1.0.6-0kali1_all.deb
    ```
 
 *(Note: Once PROXC is accepted into official Kali/Debian package repositories, users can install directly using `sudo apt update && sudo apt install proxc`.)*

@@ -1,3 +1,11 @@
+proxc (1.0.6-0kali1) kali-dev; urgency=medium
+
+  * Prepare PROXC v1.0.6 for Debian/Kali packaging.
+  * Update application version metadata to 1.0.6.
+  * Include Debian packaging and test-suite improvements.
+
+ -- Mithun A <mithunanbazhagan@gmail.com>  Thu, 27 Aug 2026 21:24:00 +0530
+
 proxc (1.0.5-0kali1) kali-dev; urgency=medium
 
   * New upstream release v1.0.5.
