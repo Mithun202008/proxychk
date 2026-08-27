@@ -1,0 +1,903 @@
+#!/usr/bin/env python3
+# ================================================================
+#  PROXC — Proxy Validation & Analysis Engine
+#  Author  : Mithun A
+#  Version : 1.0.4
+#  License : MIT
+#  GitHub  : https://github.com/Mithun202008/proxychk
+# ================================================================
+
+import sys
+import os
+import csv
+import time
+import json
+import re
+import socket
+import ssl
+import struct
+import argparse
+import base64
+import shutil
+import subprocess
+import urllib.request
+import urllib.error
+from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+# Force UTF-8 stdout & stderr encoding for cross-platform unicode safety (Windows CMD/PowerShell)
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+
+VERSION = "1.0.4"
+AUTHOR = "Mithun A"
+TOOL = "proxc"
+GITHUB_REPO = "Mithun202008/proxychk"
+
+# ---------- Enable ANSI colors on Windows PowerShell / CMD ----------
+def enable_windows_ansi():
+    if os.name == 'nt':
+        try:
+            import ctypes
+            kernel32 = ctypes.windll.kernel32
+            handle = kernel32.GetStdHandle(-11)
+            mode = ctypes.c_ulong()
+            kernel32.GetConsoleMode(handle, ctypes.byref(mode))
+            kernel32.SetConsoleMode(handle, mode.value | 0x0004)
+        except Exception:
+            pass
+
+enable_windows_ansi()
+
+# ---------- Colors ----------
+RED = '\033[0;31m'
+GREEN = '\033[0;32m'
+YELLOW = '\033[1;33m'
+CYAN = '\033[0;36m'
+BLUE = '\033[0;34m'
+MAGENTA = '\033[0;35m'
+BOLD = '\033[1m'
+DIM = '\033[2m'
+RESET = '\033[0m'
+
+# ---------- Slide-in Banner Animation ----------
+def slide_in_line(line, delay=0.002):
+    try:
+        width = shutil.get_terminal_size().columns
+    except Exception:
+        width = 80
+    padding = max(width - len(line), 0)
+    for i in range(padding, -1, -2):  # step by 2 for smoother/faster slide
+        print("\r\033[K" + " " * i + line, end="", flush=True)
+        time.sleep(delay)
+    print("\r\033[K" + line)  # final clean position
+
+# ---------- Banner ----------
+def show_banner():
+    banner_lines = [
+        r"██████╗ ██████╗  ██████╗ ██╗  ██╗ ██████╗",
+        r"██╔══██╗██╔══██╗██╔═══██╗╚██╗██╔╝██╔════╝",
+        r"██████╔╝██████╔╝██║   ██║ ╚███╗  ██║     ",
+        r"██╔═══╝ ██╔══██╗██║   ██║ ██╔██╗ ██║     ",
+        r"██║     ██║  ██║╚██████╔╝██╔╝ ██╗╚██████╗",
+        r"╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝",
+    ]
+    print(f"{CYAN}{BOLD}")
+    for line in banner_lines:
+        slide_in_line(line)
+    print(f"{RESET}", end="")
+    print(f"                 {BOLD}{CYAN}PROXC{RESET}")
+    print(f"        {DIM}--------------------------------{RESET}")
+    print(f"        {DIM}Proxy & Security Toolkit{RESET}")
+    print(f"        {DIM}Version : {VERSION}{RESET}")
+    print(f"        {DIM}Author  : {AUTHOR}{RESET}")
+    print(f"        {DIM}--------------------------------{RESET}\n")
+
+# ---------- Usage / No-Argument Menu ----------
+def show_usage_menu():
+    show_banner()
+    print(f"  {BOLD}Usage:{RESET}")
+    print(f"    {CYAN}proxc{RESET} [OPTIONS] <TARGET>")
+    print(f"    {CYAN}proxc{RESET} <file.csv|file.txt> [target_url] [timeout] [threads]")
+    print(f"    {CYAN}proxc{RESET} <ip|host> <port> [protocol/target_url] [timeout]")
+    print(f"    {CYAN}proxc{RESET} <proto://[user:pass@]host:port>\n")
+    print(f"  {BOLD}Options:{RESET}")
+    print(f"    {CYAN}-h, --help{RESET}       Show this help menu")
+    print(f"    {CYAN}-v, --version{RESET}    Show installed PROXC version")
+    print(f"    {CYAN}-u, --update{RESET}     Update PROXC to the latest version")
+    print(f"    {CYAN}-t, --target{RESET}     Set target URL (default: http://httpbin.org/ip)")
+    print(f"    {CYAN}-w, --timeout{RESET}    Set timeout in seconds (default: 5)")
+    print(f"    {CYAN}--threads{RESET}        Set concurrent worker threads (default: 1)")
+    print(f"    {CYAN}-o, --output{RESET}     Custom output filename for working proxies\n")
+    print(f"  {BOLD}Examples:{RESET}")
+    print(f"    {DIM}proxc proxies.csv{RESET}")
+    print(f"    {DIM}proxc proxy_list.txt{RESET}")
+    print(f"    {DIM}proxc 1.2.3.4 8080{RESET}")
+    print(f"    {DIM}proxc 1.2.3.4 8080 socks5{RESET}")
+    print(f"    {DIM}proxc socks5://user:pass@1.2.3.4:1080{RESET}")
+    print(f"    {DIM}proxc --version{RESET}")
+    print(f"    {DIM}proxc --update{RESET}\n")
+    print(f"  {DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{RESET}\n")
+
+# ---------- Help Menu ----------
+def show_help():
+    show_usage_menu()
+    sys.exit(0)
+
+# ---------- Version ----------
+def show_version():
+    print(VERSION)
+    sys.exit(0)
+
+# ---------- Parse Version Tuple for Semantic Versioning ----------
+def parse_version_tuple(v_str):
+    if not v_str:
+        return (0, 0, 0)
+    cleaned = v_str.strip().lstrip('vV')
+    parts = [int(x) for x in re.findall(r'\d+', cleaned)]
+    return tuple(parts) if parts else (0, 0, 0)
+
+# ---------- Updater ----------
+def run_updater():
+    show_banner()
+    print(f"{BOLD}PROXC Updater{RESET}\n")
+
+    print(f"{CYAN}[+]{RESET} Checking current version...")
+    print(f"{CYAN}[+]{RESET} Current version: {VERSION}")
+    print(f"{CYAN}[+]{RESET} Checking GitHub for latest version...")
+
+    latest_version = None
+    download_url = None
+
+    headers = {'User-Agent': f'proxc/{VERSION}'}
+
+    # 1. Try Releases API
+    try:
+        api_url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+        req = urllib.request.Request(api_url, headers=headers)
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            data = json.loads(resp.read().decode('utf-8'))
+            latest_version = data.get('tag_name', '').lstrip('vV')
+            download_url = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/proxc"
+    except Exception:
+        pass
+
+    # 2. Fallback to raw main proxc file version check if API check didn't produce a version
+    if not latest_version:
+        try:
+            raw_url = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/proxc"
+            req = urllib.request.Request(raw_url, headers=headers)
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                content = resp.read().decode('utf-8', errors='replace')
+                v_match = re.search(r'VERSION\s*=\s*["\']([^"\']+)["\']', content)
+                if v_match:
+                    latest_version = v_match.group(1)
+                    download_url = raw_url
+        except Exception:
+            pass
+
+    if not latest_version:
+        print(f"\n{RED}[!]{RESET} Unable to check for updates.")
+        print(f"{RED}[!]{RESET} Please check your internet connection.\n")
+        sys.exit(1)
+
+    print(f"{CYAN}[+]{RESET} Latest version: {latest_version}\n")
+
+    current_tuple = parse_version_tuple(VERSION)
+    latest_tuple = parse_version_tuple(latest_version)
+
+    if latest_tuple > current_tuple:
+        print(f"{GREEN}[+]{RESET} Update available.")
+        print(f"{GREEN}[+]{RESET} Updating PROXC...")
+
+        target_path = os.path.realpath(sys.argv[0])
+        if not os.path.isfile(target_path) or not target_path.endswith('proxc'):
+            target_path = shutil.which('proxc') or target_path
+
+        # Check if binary is managed by Debian package manager (dpkg)
+        if os.name != 'nt' and shutil.which('dpkg'):
+            try:
+                res = subprocess.run(['dpkg', '-S', target_path], capture_output=True, text=True)
+                if res.returncode == 0 and 'proxc:' in res.stdout:
+                    print(f"\n{YELLOW}[!]{RESET} PROXC was installed via the Debian package manager (apt/dpkg).")
+                    print(f"{YELLOW}[!]{RESET} Direct self-update is disabled for package-managed installations.")
+                    print(f"{CYAN}[+]{RESET} To update PROXC, please run: {BOLD}sudo apt update && sudo apt upgrade proxc{RESET}\n")
+                    sys.exit(0)
+            except Exception:
+                pass
+
+        try:
+            req = urllib.request.Request(download_url, headers=headers)
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                new_code = resp.read().decode('utf-8')
+
+            tmp_path = target_path + ".tmp"
+            with open(tmp_path, 'w', encoding='utf-8') as f:
+                f.write(new_code)
+
+            shutil.move(tmp_path, target_path)
+            if os.name != 'nt':
+                os.chmod(target_path, 0o755)
+
+            print(f"\n{GREEN}[+]{RESET} Update completed successfully.\n")
+        except PermissionError:
+            if os.name != 'nt' and shutil.which('sudo') and hasattr(os, 'geteuid') and os.geteuid() != 0:
+                print(f"\n{YELLOW}[!]{RESET} Permission denied writing to {target_path}")
+                print(f"{CYAN}[+]{RESET} Relaunching update with sudo (elevated permissions)...\n")
+                try:
+                    os.execvp('sudo', ['sudo', sys.executable, target_path, '--update'])
+                except Exception:
+                    pass
+            print(f"\n{RED}[!]{RESET} Permission denied while updating {target_path}")
+            print(f"{RED}[!]{RESET} Please run update with elevated permissions: {BOLD}sudo $(which proxc) --update{RESET}\n")
+            sys.exit(1)
+        except Exception as e:
+            print(f"\n{RED}[!]{RESET} Update failed: {e}\n")
+            sys.exit(1)
+    else:
+        print(f"{GREEN}[✓]{RESET} PROXC is already up to date.\n")
+
+
+def resolve_protocol(raw):
+    if not raw:
+        return "http"
+    clean = re.sub(r'[\[\]"\'\s]', '', str(raw)).split(',')[0].lower()
+    if 'socks5' in clean:
+        return 'socks5'
+    if 'socks4' in clean:
+        return 'socks4'
+    if 'https' in clean:
+        return 'https'
+    return 'http'
+
+# ---------- Parse Target URL ----------
+def parse_target_url(target_url):
+    target_url = target_url.strip()
+    if not target_url.startswith("http://") and not target_url.startswith("https://"):
+        target_url = "http://" + target_url
+    
+    scheme = "https" if target_url.startswith("https://") else "http"
+    no_scheme = target_url.split("://", 1)[1]
+    parts = no_scheme.split("/", 1)
+    host_port = parts[0]
+    path = "/" + parts[1] if len(parts) > 1 else "/"
+
+    if ":" in host_port:
+        host, port = host_port.split(":", 1)
+        port = int(port)
+    else:
+        host = host_port
+        port = 443 if scheme == "https" else 80
+        
+    return scheme, host, port, path, target_url
+
+# ---------- Pure Python Proxy Socket Checker (with Authentication) ----------
+def check_proxy(ip, port, proto, target_url, timeout, username="", password=""):
+    start_time = time.time()
+    scheme, host, target_port, path, full_url = parse_target_url(target_url)
+
+    # Auth Header for HTTP / HTTPS
+    auth_header = ""
+    if username or password:
+        auth_bytes = f"{username}:{password}".encode('utf-8')
+        b64_auth = base64.b64encode(auth_bytes).decode('ascii')
+        auth_header = f"Proxy-Authorization: Basic {b64_auth}\r\n"
+
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(timeout)
+        port_num = int(port)
+
+        if proto == 'socks5':
+            sock.connect((ip, port_num))
+            # Greeting: support NO AUTH (\x00) and USER/PASS (\x02)
+            if username or password:
+                sock.sendall(b"\x05\x02\x00\x02")
+            else:
+                sock.sendall(b"\x05\x01\x00")
+            
+            resp = sock.recv(2)
+            if len(resp) < 2 or resp[0] != 5:
+                sock.close()
+                return "000", 0, "N/A"
+            
+            chosen_method = resp[1]
+            if chosen_method == 2:  # User/Pass Auth
+                u_bytes = username.encode('utf-8')
+                p_bytes = password.encode('utf-8')
+                auth_pkt = b"\x01" + bytes([len(u_bytes)]) + u_bytes + bytes([len(p_bytes)]) + p_bytes
+                sock.sendall(auth_pkt)
+                auth_resp = sock.recv(2)
+                if len(auth_resp) < 2 or auth_resp[1] != 0:
+                    sock.close()
+                    return "407", 0, "N/A"  # Proxy Authentication Required / Failed
+            elif chosen_method != 0:
+                sock.close()
+                return "000", 0, "N/A"
+
+            # Connect request
+            try:
+                dest_ip_bytes = socket.inet_aton(host)
+                req = b"\x05\x01\x00\x01" + dest_ip_bytes + struct.pack(">H", target_port)
+            except socket.error:
+                host_bytes = host.encode('utf-8')
+                req = b"\x05\x01\x00\x03" + bytes([len(host_bytes)]) + host_bytes + struct.pack(">H", target_port)
+            
+            sock.sendall(req)
+            reply = sock.recv(10)
+            if len(reply) < 4 or reply[1] != 0:
+                sock.close()
+                return "000", 0, "N/A"
+            
+            if scheme == 'https':
+                context = ssl.create_default_context()
+                context.check_hostname = False
+                context.verify_mode = ssl.CERT_NONE
+                sock = context.wrap_socket(sock, server_hostname=host)
+
+        elif proto == 'socks4':
+            sock.connect((ip, port_num))
+            user_bytes = username.encode('utf-8') if username else b""
+            try:
+                dest_ip_bytes = socket.inet_aton(host)
+                req = b"\x04\x01" + struct.pack(">H", target_port) + dest_ip_bytes + user_bytes + b"\x00"
+            except socket.error:
+                req = b"\x04\x01" + struct.pack(">H", target_port) + b"\x00\x00\x00\x01" + user_bytes + b"\x00" + host.encode('utf-8') + b"\x00"
+            
+            sock.sendall(req)
+            reply = sock.recv(8)
+            if len(reply) < 2 or reply[1] != 90:
+                sock.close()
+                return "000", 0, "N/A"
+            
+            if scheme == 'https':
+                context = ssl.create_default_context()
+                context.check_hostname = False
+                context.verify_mode = ssl.CERT_NONE
+                sock = context.wrap_socket(sock, server_hostname=host)
+
+        elif proto == 'https':
+            # HTTP CONNECT Tunnel
+            sock.connect((ip, port_num))
+            connect_req = f"CONNECT {host}:{target_port} HTTP/1.1\r\nHost: {host}:{target_port}\r\nUser-Agent: proxc/{VERSION}\r\n{auth_header}\r\n"
+            sock.sendall(connect_req.encode())
+            
+            response = b""
+            while b"\r\n\r\n" not in response:
+                chunk = sock.recv(1024)
+                if not chunk:
+                    break
+                response += chunk
+            
+            status_line = response.split(b"\r\n")[0].decode('latin1', errors='ignore')
+            if "200" not in status_line:
+                sock.close()
+                if "407" in status_line:
+                    return "407", int((time.time() - start_time) * 1000), "N/A"
+                return "000", 0, "N/A"
+            
+            context = ssl.create_default_context()
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+            sock = context.wrap_socket(sock, server_hostname=host)
+
+        else: # http
+            sock.connect((ip, port_num))
+
+        # Send HTTP GET Request
+        if proto in ['socks5', 'socks4', 'https']:
+            http_req = f"GET {path} HTTP/1.1\r\nHost: {host}\r\nUser-Agent: proxc/{VERSION}\r\nAccept: */*\r\nConnection: close\r\n\r\n"
+        else:
+            http_req = f"GET {full_url} HTTP/1.1\r\nHost: {host}\r\nUser-Agent: proxc/{VERSION}\r\n{auth_header}Accept: */*\r\nConnection: close\r\n\r\n"
+
+        sock.sendall(http_req.encode())
+
+        # Receive HTTP Response
+        resp_data = b""
+        while True:
+            chunk = sock.recv(4096)
+            if not chunk:
+                break
+            resp_data += chunk
+            if len(resp_data) > 65536:
+                break
+
+        sock.close()
+        elapsed_ms = int((time.time() - start_time) * 1000)
+
+        if not resp_data:
+            return "000", elapsed_ms, "N/A"
+
+        # Parse Status Code
+        lines = resp_data.decode('latin1', errors='ignore').split("\r\n")
+        status_line = lines[0] if lines else ""
+        status_match = re.search(r'HTTP/\d\.\d\s+(\d{3})', status_line)
+        status_code = status_match.group(1) if status_match else "000"
+
+        # Extract Origin IP if present in JSON response body
+        proxied_ip = "N/A"
+        body = resp_data.decode('utf-8', errors='ignore')
+        ip_match = re.search(r'"origin"\s*:\s*"([^"]+)"', body)
+        if ip_match:
+            proxied_ip = ip_match.group(1).split(",")[0].strip()
+        else:
+            raw_ip_match = re.search(r'\b(?:\d{1,3}\.){3}\d{1,3}\b', body)
+            if raw_ip_match and status_code in ["200", "301", "302", "403"]:
+                proxied_ip = raw_ip_match.group(0)
+
+        return status_code, elapsed_ms, proxied_ip
+
+    except (socket.timeout, socket.error, ssl.SSLError, Exception):
+        elapsed_ms = int((time.time() - start_time) * 1000)
+        return "000", elapsed_ms, "N/A"
+
+# ---------- Header Mapping ----------
+COLUMN_MAPPINGS = {
+    'ip': ['ip', 'host', 'ipaddress', 'ip_address', 'address'],
+    'port': ['port'],
+    'type': ['protocols', 'protocol', 'type', 'proxytype', 'proto'],
+    'user': ['username', 'user', 'proxyuser', 'login', 'auth_user'],
+    'pass': ['password', 'pass', 'proxypass', 'pwd', 'auth_pass'],
+    'country': ['country', 'countrycode', 'country_code', 'cc'],
+    'anon': ['anonymitylevel', 'anonymity', 'anon', 'level'],
+    'asn': ['asn'],
+    'org': ['org', 'organization'],
+    'isp': ['isp', 'provider'],
+    'latency': ['latency', 'responsetime', 'response_time', 'ping'],
+    'speed': ['speed'],
+    'uptime': ['uptime', 'up_time'],
+    'uptime_ok': ['uptimesuccesscount', 'success_count'],
+    'uptime_try': ['uptimetrycount', 'try_count', 'total_count'],
+    'updated': ['updated_at', 'lastseen', 'last_checked', 'updated', 'date']
+}
+
+FIELD_DISPLAY_NAMES = {
+    'ip': 'IP Address / Host',
+    'port': 'Port',
+    'type': 'Protocol / Type',
+    'user': 'Username',
+    'pass': 'Password',
+    'country': 'Country',
+    'anon': 'Anonymity Level',
+    'asn': 'ASN',
+    'org': 'Organization',
+    'isp': 'ISP',
+    'latency': 'Latency / Response Time',
+    'speed': 'Speed',
+    'uptime': 'UpTime %',
+    'uptime_ok': 'UpTime Success Count',
+    'uptime_try': 'UpTime Try Count',
+    'updated': 'Last Updated'
+}
+
+def parse_header_columns(header_row):
+    indexes = {key: -1 for key in COLUMN_MAPPINGS}
+    for idx, col_name in enumerate(header_row):
+        clean_name = re.sub(r'[\s"\_]', '', str(col_name)).lower()
+        for key, aliases in COLUMN_MAPPINGS.items():
+            if indexes[key] == -1 and clean_name in aliases:
+                indexes[key] = idx
+                break
+    return indexes
+
+# ---------- Flexible Proxy String Parser ----------
+def parse_proxy_string(line):
+    line = line.strip()
+    if not line or line.startswith('#'):
+        return None
+    
+    proto = "http"
+    user = ""
+    password = ""
+    host = ""
+    port = ""
+
+    # Check scheme prefix (e.g. socks5://)
+    if "://" in line:
+        proto_part, line = line.split("://", 1)
+        proto = resolve_protocol(proto_part)
+
+    # Check user:pass@host:port
+    if "@" in line:
+        auth_part, host_part = line.rsplit("@", 1)
+        if ":" in auth_part:
+            user, password = auth_part.split(":", 1)
+        else:
+            user = auth_part
+        line = host_part
+
+    # Split host:port or host:port:user:pass
+    parts = line.split(":")
+    if len(parts) == 2:
+        host, port = parts[0], parts[1]
+    elif len(parts) == 4:
+        host, port, user, password = parts[0], parts[1], parts[2], parts[3]
+    elif len(parts) >= 3:
+        host, port = parts[0], parts[1]
+        if not user:
+            user = parts[2]
+        if len(parts) >= 4 and not password:
+            password = parts[3]
+    
+    if host and port and port.isdigit():
+        return {
+            'ip': host,
+            'port': port,
+            'proto': proto,
+            'user': user,
+            'pass': password
+        }
+    return None
+
+# ---------- Main Execution ----------
+def main():
+    raw_args = sys.argv[1:]
+
+    # Early Flags & Update Command
+    if not raw_args:
+        show_usage_menu()
+        sys.exit(0)
+    if any(arg in ['--update', '-u'] and arg == raw_args[0] for arg in raw_args) or raw_args == ['--update']:
+        run_updater()
+        sys.exit(0)
+    if any(arg in ['-h', '--help', 'help'] for arg in raw_args):
+        show_help()
+    if any(arg in ['-v', '--version'] for arg in raw_args):
+        show_version()
+
+    # Argument Parser
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument('arg1', nargs='?', default=None)
+    parser.add_argument('arg2', nargs='?', default=None)
+    parser.add_argument('arg3', nargs='?', default=None)
+    parser.add_argument('arg4', nargs='?', default=None)
+
+    parser.add_argument('-u', '--target', default=None)
+    parser.add_argument('-w', '--timeout', type=int, default=None)
+    parser.add_argument('-t', '--threads', type=int, default=None)
+    parser.add_argument('-o', '--output', default=None)
+    parser.add_argument('--update', action='store_true', default=False)
+
+    args, _ = parser.parse_known_args()
+
+    if args.update:
+        run_updater()
+        sys.exit(0)
+
+    arg1 = args.arg1
+    arg2 = args.arg2
+    arg3 = args.arg3
+    arg4 = args.arg4
+
+    if not arg1:
+        show_usage_menu()
+        sys.exit(0)
+
+    show_banner()
+
+    # Check if arg1 is an existing file OR a Single Proxy Check
+    is_file_mode = os.path.isfile(arg1)
+
+    if is_file_mode:
+        # File Scan Mode
+        csv_file = arg1
+        target_url = args.target or (arg2 if arg2 and not arg2.isdigit() else "http://httpbin.org/ip")
+        
+        # Timeout resolution
+        if args.timeout:
+            timeout = args.timeout
+        elif arg3 and arg3.isdigit():
+            timeout = int(arg3)
+        elif arg2 and arg2.isdigit():
+            timeout = int(arg2)
+        else:
+            timeout = 5
+
+        # Threads resolution
+        if args.threads:
+            threads = args.threads
+        elif arg4 and arg4.isdigit():
+            threads = int(arg4)
+        elif arg3 and arg3.isdigit() and arg2 and not arg2.isdigit():
+            threads = int(arg3)
+        else:
+            threads = 1
+
+        print(f"  {BOLD}Target File :{RESET} {CYAN}{csv_file}{RESET}")
+        print(f"  {BOLD}Target URL  :{RESET} {CYAN}{target_url}{RESET}")
+        print(f"  {BOLD}Timeout     :{RESET} {CYAN}{timeout}s per proxy{RESET}")
+        print(f"  {BOLD}Threads     :{RESET} {CYAN}{threads} worker(s){RESET}")
+        print(f"  {DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{RESET}\n")
+
+        try:
+            with open(csv_file, 'r', encoding='utf-8', errors='ignore') as f:
+                raw_lines = [line.strip() for line in f if line.strip() and not line.strip().startswith('#')]
+        except Exception as e:
+            print(f"  {RED}[!] Failed to read file: {e}{RESET}\n")
+            sys.exit(1)
+
+        if not raw_lines:
+            print(f"  {RED}[!] File is empty.{RESET}\n")
+            sys.exit(1)
+
+        header_candidate = [c.strip() for c in raw_lines[0].split(',')]
+        col_map = parse_header_columns(header_candidate)
+
+        proxy_items = []
+        is_csv_mode = (col_map['ip'] != -1 and col_map['port'] != -1)
+
+        if is_csv_mode:
+            print(f"  {BOLD}File Mode   :{RESET} {GREEN}Structured CSV{RESET}")
+            print(f"  {BOLD}Detected Columns:{RESET}")
+            for key, idx in col_map.items():
+                if idx >= 0:
+                    print(f"  {GREEN}  ✔{RESET}  col[{idx}]  →  {BOLD}{FIELD_DISPLAY_NAMES[key]}{RESET}")
+
+            for line_idx, line in enumerate(raw_lines[1:], start=1):
+                row = [c.strip() for c in line.split(',')]
+                def get_val(key):
+                    idx = col_map[key]
+                    if idx >= 0 and idx < len(row):
+                        return row[idx].strip().strip('"')
+                    return ""
+
+                ip = get_val('ip')
+                port = get_val('port')
+                if not ip or not port:
+                    continue
+
+                proto = resolve_protocol(get_val('type'))
+                proxy_items.append({
+                    'index': len(proxy_items) + 1,
+                    'ip': ip,
+                    'port': port,
+                    'proto': proto,
+                    'user': get_val('user'),
+                    'pass': get_val('pass'),
+                    'country': get_val('country'),
+                    'anon': get_val('anon'),
+                    'asn': get_val('asn'),
+                    'org': get_val('org'),
+                    'isp': get_val('isp'),
+                    'latency': get_val('latency'),
+                    'speed': get_val('speed'),
+                    'uptime': get_val('uptime'),
+                    'up_ok': get_val('uptime_ok'),
+                    'up_try': get_val('uptime_try'),
+                    'updated': get_val('updated')
+                })
+        else:
+            print(f"  {BOLD}File Mode   :{RESET} {CYAN}Plain Text / Raw List (IP:Port / Auth){RESET}")
+            for line in raw_lines:
+                parsed = parse_proxy_string(line)
+                if parsed:
+                    proxy_items.append({
+                        'index': len(proxy_items) + 1,
+                        'ip': parsed['ip'],
+                        'port': parsed['port'],
+                        'proto': parsed['proto'],
+                        'user': parsed['user'],
+                        'pass': parsed['pass'],
+                        'country': '',
+                        'anon': '',
+                        'asn': '',
+                        'org': '',
+                        'isp': '',
+                        'latency': '',
+                        'speed': '',
+                        'uptime': '',
+                        'up_ok': '',
+                        'up_try': '',
+                        'updated': ''
+                    })
+
+        print(f"\n  {BOLD}Scanning {len(proxy_items)} proxies...{RESET}")
+        print(f"  {DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{RESET}\n")
+
+        working = []
+        dead = []
+        errors = []
+        total = len(proxy_items)
+
+        def process_item(item):
+            meta = []
+            if item['country']:
+                meta.append(item['country'])
+            if item['anon']:
+                meta.append(item['anon'])
+            if item['user']:
+                meta.append("Auth")
+            meta_str = " | ".join(meta)
+
+            http_code, time_ms, proxied_ip = check_proxy(
+                item['ip'], item['port'], item['proto'], target_url, timeout, item['user'], item['pass']
+            )
+
+            item['http_code'] = http_code
+            item['time_ms'] = time_ms
+            item['proxied_ip'] = proxied_ip
+
+            return item, meta_str
+
+        if threads > 1:
+            with ThreadPoolExecutor(max_workers=threads) as executor:
+                future_map = {executor.submit(process_item, item): item for item in proxy_items}
+                for future in as_completed(future_map):
+                    item, meta_str = future.result()
+                    http_code = item['http_code']
+                    time_ms = item['time_ms']
+                    proxied_ip = item['proxied_ip']
+
+                    prefix = f"  {CYAN}[{item['index']:3d}]{RESET}  Testing {BOLD}{item['ip']}:{item['port']:<15}{RESET} {item['proto']:<8} {DIM}{meta_str:<22}{RESET}  →  "
+                    if http_code in ["200", "301", "302", "403"]:
+                        print(f"{prefix}{GREEN}[ALIVE]{RESET}  HTTP {BOLD}{http_code}{RESET}  |  {time_ms}ms  |  Seen as: {MAGENTA}{proxied_ip}{RESET}")
+                        working.append(item)
+                    elif http_code == "000":
+                        print(f"{prefix}{RED}[DEAD] {RESET}  Timeout / Connection refused")
+                        dead.append(item)
+                    else:
+                        print(f"{prefix}{YELLOW}[ERR]  {RESET}  HTTP {http_code}  |  {time_ms}ms")
+                        errors.append(item)
+        else:
+            for item in proxy_items:
+                meta_str = " | ".join(filter(None, [item['country'], item['anon'], "Auth" if item['user'] else ""]))
+                prefix = f"  {CYAN}[{item['index']:3d}]{RESET}  Testing {BOLD}{item['ip']}:{item['port']:<15}{RESET} {item['proto']:<8} {DIM}{meta_str:<22}{RESET}  →  "
+                
+                http_code, time_ms, proxied_ip = check_proxy(
+                    item['ip'], item['port'], item['proto'], target_url, timeout, item['user'], item['pass']
+                )
+                item['http_code'] = http_code
+                item['time_ms'] = time_ms
+                item['proxied_ip'] = proxied_ip
+
+                if http_code in ["200", "301", "302", "403"]:
+                    print(f"{prefix}{GREEN}[ALIVE]{RESET}  HTTP {BOLD}{http_code}{RESET}  |  {time_ms}ms  |  Seen as: {MAGENTA}{proxied_ip}{RESET}")
+                    working.append(item)
+                elif http_code == "000":
+                    print(f"{prefix}{RED}[DEAD] {RESET}  Timeout / Connection refused")
+                    dead.append(item)
+                else:
+                    print(f"{prefix}{YELLOW}[ERR]  {RESET}  HTTP {http_code}  |  {time_ms}ms")
+                    errors.append(item)
+
+        print(f"\n  {DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{RESET}")
+
+        if working:
+            print(f"\n  {GREEN}{BOLD}╔══════════════════════════════════════════════════════════════════╗{RESET}")
+            print(f"  {GREEN}{BOLD}║              ✔  WORKING PROXIES — FULL DETAILS                 ║{RESET}")
+            print(f"  {GREEN}{BOLD}╚══════════════════════════════════════════════════════════════════╝{RESET}\n")
+
+            working.sort(key=lambda x: x['index'])
+
+            for idx, item in enumerate(working, start=1):
+                print(f"  {GREEN}{BOLD}  ┌─ Proxy #{idx} ─────────────────────────────────────────────────{RESET}")
+                print(f"  {GREEN}  │{RESET}  {BOLD}Address        :{RESET}  {CYAN}{item['ip']}:{item['port']}{RESET}")
+                print(f"  {GREEN}  │{RESET}  {BOLD}Protocol       :{RESET}  {item['proto'].upper()}")
+                if item['user']:
+                    print(f"  {GREEN}  │{RESET}  {BOLD}Authentication :{RESET}  {YELLOW}{item['user']}:{item['pass']}{RESET}")
+                print(f"  {GREEN}  │{RESET}  {BOLD}HTTP Code      :{RESET}  {GREEN}{item['http_code']}{RESET}")
+                print(f"  {GREEN}  │{RESET}  {BOLD}Response Time  :{RESET}  {item['time_ms']} ms  {DIM}(live check){RESET}")
+                print(f"  {GREEN}  │{RESET}  {BOLD}Proxied IP     :{RESET}  {MAGENTA}{item['proxied_ip']}{RESET}  {DIM}(what target sees){RESET}")
+                if item['country']:
+                    print(f"  {GREEN}  │{RESET}  {BOLD}Country        :{RESET}  {item['country']}")
+                if item['anon']:
+                    print(f"  {GREEN}  │{RESET}  {BOLD}Anonymity      :{RESET}  {item['anon']}")
+                if item['asn']:
+                    print(f"  {GREEN}  │{RESET}  {BOLD}ASN            :{RESET}  {item['asn']}")
+                if item['org']:
+                    print(f"  {GREEN}  │{RESET}  {BOLD}Org            :{RESET}  {item['org']}")
+                if item['isp']:
+                    print(f"  {GREEN}  │{RESET}  {BOLD}ISP            :{RESET}  {item['isp']}")
+                if item['latency']:
+                    print(f"  {GREEN}  │{RESET}  {BOLD}Listed Latency :{RESET}  {item['latency']} ms  {DIM}(from CSV){RESET}")
+                if item['speed']:
+                    print(f"  {GREEN}  │{RESET}  {BOLD}Speed          :{RESET}  {item['speed']}")
+
+                if item['up_ok'] and item['up_try'] and int(item['up_try']) > 0:
+                    pct = (float(item['up_ok']) / float(item['up_try'])) * 100
+                    print(f"  {GREEN}  │{RESET}  {BOLD}UpTime         :{RESET}  {item['up_ok']}/{item['up_try']}  ({pct:.1f}%)")
+                elif item['uptime']:
+                    print(f"  {GREEN}  │{RESET}  {BOLD}UpTime         :{RESET}  {item['uptime']}")
+
+                if item['updated']:
+                    print(f"  {GREEN}  │{RESET}  {BOLD}Last Updated   :{RESET}  {DIM}{item['updated']}{RESET}")
+                
+                auth_str = f"{item['user']}:{item['pass']}@" if item['user'] else ""
+                print(f"  {GREEN}  │{RESET}")
+                print(f"  {GREEN}  │{RESET}  {BOLD}Proxy String   :{RESET}  {DIM}--proxy {item['proto']}://{auth_str}{item['ip']}:{item['port']}{RESET}")
+                print(f"  {GREEN}{BOLD}  └──────────────────────────────────────────────────────────────{RESET}\n")
+
+        print(f"  {DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{RESET}")
+        print(f"  {BOLD}SCAN SUMMARY{RESET}")
+        print(f"  {DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{RESET}")
+        print(f"  Total Checked   :  {BOLD}{total}{RESET}")
+        print(f"  {GREEN}Alive           :  {BOLD}{len(working)}{RESET}")
+        print(f"  {RED}Dead            :  {BOLD}{len(dead)}{RESET}")
+        print(f"  {YELLOW}Errors          :  {BOLD}{len(errors)}{RESET}\n")
+
+        if working:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            outfile = args.output or f"working_proxies_{timestamp}.txt"
+            try:
+                with open(outfile, 'w', encoding='utf-8') as f:
+                    f.write(f"# PROXC v{VERSION} — by {AUTHOR}\n")
+                    f.write(f"# Scanned : {csv_file}  |  Target: {target_url}  |  Date: {datetime.now().ctime()}\n\n")
+                    f.write(f"{'IP/HOST':<20} {'PORT':<6} {'TYPE':<7} {'CODE':<5} {'TIME_MS':<8} {'PROXIED_IP':<20} {'AUTH':<15}\n")
+                    f.write("─" * 90 + "\n")
+                    for item in working:
+                        auth_val = f"{item['user']}:{item['pass']}" if item['user'] else "N/A"
+                        f.write(
+                            f"{item['ip']:<20} {item['port']:<6} {item['proto']:<7} {item['http_code']:<5} "
+                            f"{item['time_ms']:<8} {item['proxied_ip']:<20} {auth_val:<15}\n"
+                        )
+                print(f"  {CYAN}[*]{RESET} Saved → {BOLD}{outfile}{RESET}")
+            except Exception as e:
+                print(f"  {RED}[!] Failed to save output file: {e}{RESET}")
+
+        print(f"  {DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{RESET}\n")
+
+    else:
+        # Single Proxy Check Mode
+        single_target = args.target or "http://httpbin.org/ip"
+        timeout = args.timeout or 5
+
+        # Try parsing single proxy string
+        if arg2 and arg2.isdigit():
+            ip = arg1
+            port = arg2
+            proto = resolve_protocol(arg3) if arg3 and not arg3.startswith("http://") and not arg3.startswith("https://") else "http"
+            if arg3 and (arg3.startswith("http://") or arg3.startswith("https://")):
+                single_target = arg3
+            if arg4 and arg4.isdigit():
+                timeout = int(arg4)
+            parsed = {'ip': ip, 'port': port, 'proto': proto, 'user': '', 'pass': ''}
+        else:
+            parsed = parse_proxy_string(arg1)
+            if arg2 and (arg2.startswith("http://") or arg2.startswith("https://")):
+                single_target = arg2
+            if arg3 and arg3.isdigit():
+                timeout = int(arg3)
+
+        if not parsed:
+            print(f"  {RED}[!] Invalid proxy address or file path: {arg1}{RESET}\n")
+            sys.exit(1)
+
+        print(f"  {BOLD}Check Mode  :{RESET} {CYAN}Single Proxy Check{RESET}")
+        print(f"  {BOLD}Proxy       :{RESET} {CYAN}{parsed['proto']}://{parsed['ip']}:{parsed['port']}{RESET}")
+        if parsed['user']:
+            print(f"  {BOLD}Auth        :{RESET} {YELLOW}{parsed['user']}:{parsed['pass']}{RESET}")
+        print(f"  {BOLD}Target      :{RESET} {CYAN}{single_target}{RESET}")
+        print(f"  {BOLD}Timeout     :{RESET} {CYAN}{timeout}s{RESET}")
+        print(f"  {DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{RESET}\n")
+
+        print(f"  Testing {BOLD}{parsed['ip']}:{parsed['port']}{RESET} ({parsed['proto']})  →  ", end="", flush=True)
+        http_code, time_ms, proxied_ip = check_proxy(
+            parsed['ip'], parsed['port'], parsed['proto'], single_target, timeout, parsed['user'], parsed['pass']
+        )
+
+        if http_code in ["200", "301", "302", "403"]:
+            print(f"{GREEN}[ALIVE]{RESET}  HTTP {BOLD}{http_code}{RESET}  |  {time_ms}ms  |  Seen as: {MAGENTA}{proxied_ip}{RESET}\n")
+            
+            auth_str = f"{parsed['user']}:{parsed['pass']}@" if parsed['user'] else ""
+            print(f"  {GREEN}{BOLD}┌─ Proxy Details ───────────────────────────────────────────────{RESET}")
+            print(f"  {GREEN}  │{RESET}  {BOLD}Address        :{RESET}  {CYAN}{parsed['ip']}:{parsed['port']}{RESET}")
+            print(f"  {GREEN}  │{RESET}  {BOLD}Protocol       :{RESET}  {parsed['proto'].upper()}")
+            if parsed['user']:
+                print(f"  {GREEN}  │{RESET}  {BOLD}Authentication :{RESET}  {YELLOW}{parsed['user']}:{parsed['pass']}{RESET}")
+            print(f"  {GREEN}  │{RESET}  {BOLD}HTTP Code      :{RESET}  {GREEN}{http_code}{RESET}")
+            print(f"  {GREEN}  │{RESET}  {BOLD}Response Time  :{RESET}  {time_ms} ms")
+            print(f"  {GREEN}  │{RESET}  {BOLD}Proxied IP     :{RESET}  {MAGENTA}{proxied_ip}{RESET}")
+            print(f"  {GREEN}  │{RESET}")
+            print(f"  {GREEN}  │{RESET}  {BOLD}Proxy String   :{RESET}  {DIM}--proxy {parsed['proto']}://{auth_str}{parsed['ip']}:{parsed['port']}{RESET}")
+            print(f"  {GREEN}{BOLD}  └──────────────────────────────────────────────────────────────{RESET}\n")
+            sys.exit(0)
+        else:
+            print(f"{RED}[DEAD]{RESET}  Timeout / Connection refused\n")
+            sys.exit(1)
+
+if __name__ == '__main__':
+    main()

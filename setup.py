@@ -6,10 +6,10 @@ setup(
     description="Smart Proxy Liveness Checker with streaming output",
     author="Mithun A",
     url="https://github.com/Mithun202008/proxychk",
-    scripts=["proxc"],
+    py_modules=["proxc"],
     entry_points={
-        'console_scripts': [
-            'proxc=proxc:main',
+        "console_scripts": [
+            "proxc=proxc:main",
         ],
     },
     python_requires=">=3.6",
