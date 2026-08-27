@@ -56,6 +56,8 @@ Select your operating system for direct step-by-step installation instructions:
 
 ### 🐧 Linux & Kali Linux Installation
 
+#### Option 1: Direct Script Installer (Standard Linux / macOS)
+
 1. **Clone the repository and enter the directory**:
    ```bash
    git clone https://github.com/Mithun202008/proxychk.git
@@ -72,6 +74,15 @@ Select your operating system for direct step-by-step installation instructions:
    ```bash
    proxc --help
    ```
+
+#### Option 2: Debian / Kali Linux `.deb` Package
+
+1. **Install using local `.deb` package**:
+   ```bash
+   sudo apt install ./proxc_1.0.4-1_all.deb
+   ```
+
+*(Note: Once PROXC is accepted into official Kali/Debian package repositories, users can install directly using `sudo apt update && sudo apt install proxc`.)*
 
 ---
 
