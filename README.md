@@ -28,6 +28,8 @@ proxc/
 ├── proxc                   # Main cross-platform Python CLI engine
 ├── setup.py                # Standard Python package setup
 ├── README.md               # Repository documentation
+├── CONTRIBUTING.md         # Open-source contribution guide
+├── SECURITY.md             # Security policy & vulnerability reporting
 ├── LICENSE                 # Open-source MIT License
 ├── .gitignore              # Git ignore configuration
 ├── installers/             # Platform-specific installer scripts
@@ -263,6 +265,15 @@ pip install --upgrade git+https://github.com/Mithun202008/proxychk.git
 
 - **Linux / Kali / macOS**: `sudo bash installers/uninstall.sh`
 - **Windows**: `powershell -ExecutionPolicy Bypass -File installers/uninstall.ps1`
+
+---
+
+## 🤝 Contributing & Security
+
+We welcome community contributions and security inquiries! Please review our guidelines before opening pull requests or reporting security issues:
+
+- 📜 **[Contribution Guide](CONTRIBUTING.md)** — Guidelines for setup, local testing, coding style, and submitting pull requests.
+- 🛡️ **[Security Policy](SECURITY.md)** — Supported versions, reporting security vulnerabilities, and responsible disclosure terms.
 
 ---
 
